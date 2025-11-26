@@ -78,7 +78,7 @@
                             </div>
 
                             <h6 class="text-uppercase text-info mb-3">模型常數 (Constants)</h6>
-                            <div class="row g-2">
+                            <div class="row g-2 mb-3">
                                 <div class="col-4">
                                     <label class="form-label">Ea (eV)</label>
                                     <input type="number" class="form-control" id="ea" value="1.0" step="0.1">
@@ -94,8 +94,14 @@
                             </div>
                         </div>
 
-                        <!-- Tab 2: Data Input -->
+                        <!-- Tab 2: Test Data -->
                         <div class="tab-pane fade" id="data-panel" role="tabpanel">
+                            <div class="mb-3">
+                                <label class="form-label text-info">任務時間 (Mission Time) [年]</label>
+                                <input type="number" class="form-control border-info" id="mission_years" value="2" step="0.5" min="0.5">
+                                <div class="form-text text-muted small">用於計算可靠度 R(t) 與結論</div>
+                            </div>
+
                             <div class="mb-3">
                                 <label class="form-label">總樣品數 (N)</label>
                                 <input type="number" class="form-control" id="n_samples" value="64">
@@ -105,8 +111,7 @@
 
                             <h6 class="text-uppercase text-warning mb-2">情境 A: 有失效數據 (Weibull)</h6>
                             <p class="small text-muted mb-1">輸入失效時間 (TTF)，以逗號或空格分隔。</p>
-                            <p class="small text-warning mb-2">⚠️ 至少需要 <strong>2 個</strong>失效時間才能進行 Weibull 分析 (建議 5
-                                個以上)</p>
+                            <p class="small text-warning mb-2">⚠️ 至少需要 <strong>2 個</strong>失效時間才能進行 Weibull 分析 (建議 5 個以上)</p>
                             <textarea class="form-control font-monospace mb-3" id="failures_input" rows="5"
                                 placeholder="例如: 100, 150, 200, 250, 300 (至少 2 個)"></textarea>
 
@@ -123,9 +128,10 @@
                                     <input type="number" class="form-control" id="cl" value="0.6" step="0.05">
                                 </div>
                             </div>
-                        </div>
 
+                        </div>
                     </div>
+
                     <div class="card-footer border-0 bg-transparent">
                         <button class="btn btn-primary w-100 btn-lg shadow-primary" onclick="calculate()">
                             <span class="me-2">⚡</span> 開始計算 (Calculate)
@@ -135,143 +141,149 @@
             </div>
 
             <!-- 右側：結果儀表板 -->
-            <div class="col-lg-8">
-                <!-- 1. 加速因子結果 -->
-                <div class="row mb-4">
-                    <div class="col-md-3">
-                        <div class="card glass-card text-center p-3">
-                            <div class="text-muted small">AF (Temp)</div>
-                            <div class="h4 mb-0 text-white" id="res_af_t">-</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card glass-card text-center p-3">
-                            <div class="text-muted small">AF (Humidity)</div>
-                            <div class="h4 mb-0 text-white" id="res_af_rh">-</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card glass-card text-center p-3">
-                            <div class="text-muted small">AF (Voltage)</div>
-                            <div class="h4 mb-0 text-white" id="res_af_v">-</div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card glass-card bg-primary-gradient text-center p-3">
-                            <div class="text-white-50 small">AF Total</div>
-                            <div class="h3 mb-0 text-white fw-bold" id="res_af_total">-</div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- 2. 分析結果 (Weibull & Zero-Failure) -->
-                <div class="row g-4">
-                    <!-- Weibull Chart & Stats -->
-                    <div class="col-md-12">
-                        <div class="card glass-panel">
-                            <div class="card-header border-0 d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0">可靠度分析結果</h5>
-                                <span class="badge bg-secondary" id="analysis_mode_badge">Waiting for input...</span>
+                    <div class="col-lg-8">
+                        <!-- 1. 加速因子結果 -->
+                        <div class="row mb-4">
+                            <div class="col-md-3">
+                                <div class="card glass-card text-center p-3">
+                                    <div class="text-muted small">AF (Temp)</div>
+                                    <div class="h4 mb-0 text-white" id="res_af_t">-</div>
+                                </div>
                             </div>
-                            <div class="card-body">
-                                <div class="row">
-                                    <!-- 結果數據列表 -->
-                                    <div class="col-md-4 border-end border-secondary">
-                                        <h6 class="text-muted text-uppercase small mb-3">現場壽命推算 (Field Life)</h6>
+                            <div class="col-md-3">
+                                <div class="card glass-card text-center p-3">
+                                    <div class="text-muted small">AF (Humidity)</div>
+                                    <div class="h4 mb-0 text-white" id="res_af_rh">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card glass-card text-center p-3">
+                                    <div class="text-muted small">AF (Voltage)</div>
+                                    <div class="h4 mb-0 text-white" id="res_af_v">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="card glass-card bg-primary-gradient text-center p-3">
+                                    <div class="text-white-50 small">AF Total</div>
+                                    <div class="h3 mb-0 text-white fw-bold" id="res_af_total">-</div>
+                                </div>
+                            </div>
+                        </div>
 
-                                        <!-- Weibull Results -->
-                                        <div id="weibull_stats" class="d-none">
-                                            <div class="mb-3">
-                                                <label class="small text-muted">MTTF (Mean Life)</label>
-                                                <div class="h5 text-info" id="wb_mttf">-</div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="small text-muted">B1% Life</label>
-                                                <div class="h5 text-warning" id="wb_b1">-</div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="small text-muted">Reliability (2 Years)</label>
-                                                <div class="h5 text-success" id="wb_rel">-</div>
-                                            </div>
-                                            <hr>
-                                            <div class="small text-muted">Params: β=<span id="wb_beta">-</span>, η=<span
-                                                    id="wb_eta">-</span></div>
-                                        </div>
-
-                                        <!-- Zero Failure Results -->
-                                        <div id="zf_stats" class="d-none">
-                                            <div class="mb-3">
-                                                <label class="small text-muted">MTTF (Lower Limit)</label>
-                                                <div class="h5 text-info" id="zf_mttf">-</div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="small text-muted">Max Failure Rate (FITs)</label>
-                                                <div class="h5 text-danger" id="zf_lambda">-</div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="small text-muted">Reliability (2 Years)</label>
-                                                <div class="h5 text-success" id="zf_rel">-</div>
-                                            </div>
-                                            <hr>
-                                            <div class="small text-muted">Based on Chi-Squared (CL=<span
-                                                    id="zf_cl_display">-</span>)</div>
-                                        </div>
+                        <!-- 2. 分析結果 (Weibull & Zero-Failure) -->
+                        <div class="row g-4">
+                            <!-- Weibull Chart & Stats -->
+                            <div class="col-md-12">
+                                <div class="card glass-panel">
+                                    <div class="card-header border-0 d-flex justify-content-between align-items-center">
+                                        <h5 class="mb-0">可靠度分析結果</h5>
+                                        <span class="badge bg-secondary" id="analysis_mode_badge">Waiting for
+                                            input...</span>
                                     </div>
+                                    <div class="card-body">
+                                        <div class="row">
+                                            <!-- 結果數據列表 -->
+                                            <div class="col-md-4 border-end border-secondary">
+                                                <h6 class="text-muted text-uppercase small mb-3">現場壽命推算 (Field Life)
+                                                </h6>
 
-                                    <!-- 圖表區域 (Chart Area) -->
-                                    <div class="col-md-8">
-                                        <!-- 圖表切換按鈕 -->
-                                        <div class="d-flex justify-content-end mb-2">
-                                            <div class="btn-group btn-group-sm" role="group">
-                                                <input type="radio" class="btn-check" name="chartType" id="btn_rel"
-                                                    autocomplete="off" checked onclick="switchChart('reliability')">
-                                                <label class="btn btn-outline-info" for="btn_rel">Reliability
-                                                    R(t)</label>
+                                                <!-- Weibull Results -->
+                                                <div id="weibull_stats" class="d-none">
+                                                    <div class="mb-3">
+                                                        <label class="small text-muted">MTTF (Mean Life)</label>
+                                                        <div class="h5 text-info" id="wb_mttf">-</div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="small text-muted">B1% Life</label>
+                                                        <div class="h5 text-warning" id="wb_b1">-</div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="small text-muted" id="wb_rel_label">Reliability (2 Years)</label>
+                                                        <div class="h5 text-success" id="wb_rel">-</div>
+                                                    </div>
+                                                    <hr>
+                                                    <div class="small text-muted">Params: β=<span id="wb_beta">-</span>,
+                                                        η=<span id="wb_eta">-</span></div>
+                                                </div>
 
-                                                <input type="radio" class="btn-check" name="chartType" id="btn_haz"
-                                                    autocomplete="off" onclick="switchChart('hazard')">
-                                                <label class="btn btn-outline-danger" for="btn_haz">Failure Rate
-                                                    h(t)</label>
+                                                <!-- Zero Failure Results -->
+                                                <div id="zf_stats" class="d-none">
+                                                    <div class="mb-3">
+                                                        <label class="small text-muted">MTTF (Lower Limit)</label>
+                                                        <div class="h5 text-info" id="zf_mttf">-</div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="small text-muted">Max Failure Rate (FITs)</label>
+                                                        <div class="h5 text-danger" id="zf_lambda">-</div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="small text-muted" id="zf_rel_label">Reliability (2 Years)</label>
+                                                        <div class="h5 text-success" id="zf_rel">-</div>
+                                                    </div>
+                                                    <hr>
+                                                    <div class="small text-muted">Based on Chi-Squared (CL=<span
+                                                            id="zf_cl_display">-</span>)</div>
+                                                </div>
+                                            </div>
 
-                                                <input type="radio" class="btn-check" name="chartType" id="btn_pdf"
-                                                    autocomplete="off" onclick="switchChart('pdf')">
-                                                <label class="btn btn-outline-warning" for="btn_pdf">PDF f(t)</label>
+                                            <!-- 圖表區域 (Chart Area) -->
+                                            <div class="col-md-8">
+                                                <!-- 圖表切換按鈕 -->
+                                                <div class="d-flex justify-content-end mb-2">
+                                                    <div class="btn-group btn-group-sm" role="group">
+                                                        <input type="radio" class="btn-check" name="chartType"
+                                                            id="btn_rel" autocomplete="off" checked
+                                                            onclick="switchChart('reliability')">
+                                                        <label class="btn btn-outline-info" for="btn_rel">Reliability
+                                                            R(t)</label>
+
+                                                        <input type="radio" class="btn-check" name="chartType"
+                                                            id="btn_haz" autocomplete="off"
+                                                            onclick="switchChart('hazard')">
+                                                        <label class="btn btn-outline-danger" for="btn_haz">Failure Rate
+                                                            h(t)</label>
+
+                                                        <input type="radio" class="btn-check" name="chartType"
+                                                            id="btn_pdf" autocomplete="off"
+                                                            onclick="switchChart('pdf')">
+                                                        <label class="btn btn-outline-warning" for="btn_pdf">PDF
+                                                            f(t)</label>
+                                                    </div>
+                                                </div>
+
+                                                <div id="plot_area" style="width:100%; height:400px;">
+                                                    <!-- Plotly Chart -->
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div id="plot_area" style="width:100%; height:400px;">
-                                            <!-- Plotly Chart -->
+                                        <!-- 結論區塊 (Conclusion Panel) -->
+                                        <div class="row mt-4">
+                                            <div class="col-12">
+                                                <div class="alert glass-card border-info" role="alert"
+                                                    id="conclusion_panel" style="display: none;">
+                                                    <h6 class="alert-heading fw-bold text-info"><i
+                                                            class="bi bi-lightbulb-fill me-2"></i>分析結論 (Conclusion)</h6>
+                                                    <p class="mb-0 text-light" id="conclusion_text"
+                                                        style="line-height: 1.6; font-size: 0.95rem;">
+                                                        <!-- JS will inject text here -->
+                                                    </p>
+                                                </div>
+                                            </div>
                                         </div>
+
                                     </div>
                                 </div>
-
-                                <!-- 結論區塊 (Conclusion Panel) -->
-                                <div class="row mt-4">
-                                    <div class="col-12">
-                                        <div class="alert glass-card border-info" role="alert" id="conclusion_panel"
-                                            style="display: none;">
-                                            <h6 class="alert-heading fw-bold text-info"><i
-                                                    class="bi bi-lightbulb-fill me-2"></i>分析結論 (Conclusion)</h6>
-                                            <p class="mb-0 text-light" id="conclusion_text"
-                                                style="line-height: 1.6; font-size: 0.95rem;">
-                                                <!-- JS will inject text here -->
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
 
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Custom JS -->
-    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+            <!-- Bootstrap JS -->
+            <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+            <!-- Custom JS -->
+            <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 
 </html>

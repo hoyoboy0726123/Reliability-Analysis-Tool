@@ -135,9 +135,10 @@ def calculate_weibull(failures, suspensions):
     except Exception as e:
         return {"error": str(e)}
 
-def calculate_reliability_results(af_total, weibull_params, zero_fail_params):
+def calculate_reliability_results(af_total, weibull_params, zero_fail_params, t_mission=17520):
     """
     整合計算：可靠度推算 (包含 Weibull 模式與零失效模式)
+    t_mission: 任務時間（小時），預設 17520 小時 (2 年)
     """
     results = {}
     
@@ -153,7 +154,7 @@ def calculate_reliability_results(af_total, weibull_params, zero_fail_params):
         mttf_use = eta_use * special.gamma(1 + 1/beta)
         
         # 任務可靠度 R(t)
-        t_mission = 17520 # 2 years in hours
+        # t_mission 由參數傳入
         r_mission = np.exp(-((t_mission / eta_use) ** beta))
         
         # B1% Life
@@ -196,7 +197,7 @@ def calculate_reliability_results(af_total, weibull_params, zero_fail_params):
             # 任務可靠度 R(t) - 指數分佈
             # R(t) = exp(-lambda * t)
             # lambda 單位需換回 failures/hour: lambda_use_upper * 1e-9
-            t_mission = 17520
+            # t_mission 由參數傳入
             lambda_use_raw = lambda_use_upper * 1e-9
             r_mission_zf = np.exp(-lambda_use_raw * t_mission)
             
@@ -243,8 +244,18 @@ def calculate():
     # 3. 零失效分析參數
     zero_fail_params = data.get('zero_fail_params', {})
     
-    # 4. 綜合結果
-    final_results = calculate_reliability_results(af_total, weibull_result, zero_fail_params)
+    # 4. Mission Time (Mission Time)
+    try:
+        mission_years = float(data.get('mission_years', 2))
+        if mission_years <= 0:
+            mission_years = 2
+    except:
+        mission_years = 2
+
+    t_mission = mission_years * 8760 # Convert to hours
+
+    # 5. 綜合結果
+    final_results = calculate_reliability_results(af_total, weibull_result, zero_fail_params, t_mission)
     
     return jsonify({
         "af_result": af_result,

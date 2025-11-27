@@ -116,7 +116,21 @@ def calculate_af(params):
         else:
             af_chem = 1.0
 
-        # 8. Eyring 模型 (應力交互作用)
+        # 8. 輻射劑量加速 (AF_RAD) - Total Ionizing Dose (TID) Model
+        # Formula: (D_alt / D_use)^n
+        # 參考：MIL-STD-883, ESCC Basic Specification No. 22900
+        enable_rad = params.get('enable_rad', False)
+        if enable_rad:
+            d_use = float(params.get('d_use', 10))  # 使用環境累積劑量 (krad)
+            d_alt = float(params.get('d_alt', 100))  # 測試累積劑量 (krad)
+            n_rad = float(params.get('n_rad', 1.0))  # 劑量敏感度指數, 典型值 0.5-2.0
+            # dose_rate 用於記錄但不直接影響AF（劑量率效應需要更複雜的模型）
+
+            af_rad = (d_alt / d_use) ** n_rad
+        else:
+            af_rad = 1.0
+
+        # 9. Eyring 模型 (應力交互作用)
         # 用於處理溫度與非熱應力的交互效應
         enable_eyring = params.get('enable_eyring', False)
         af_eyring_correction = 1.0  # Eyring修正因子
@@ -167,10 +181,10 @@ def calculate_af(params):
         # 總加速因子計算
         if enable_eyring:
             # 使用Eyring模型時，應用修正因子
-            af_total = af_t * af_rh * af_v * af_tc * af_vib * af_uv * af_chem * af_eyring_correction
+            af_total = af_t * af_rh * af_v * af_tc * af_vib * af_uv * af_chem * af_rad * af_eyring_correction
         else:
             # 簡化模型：假設應力獨立
-            af_total = af_t * af_rh * af_v * af_tc * af_vib * af_uv * af_chem
+            af_total = af_t * af_rh * af_v * af_tc * af_vib * af_uv * af_chem * af_rad
 
         return {
             "af_t": round(af_t, 4),
@@ -180,6 +194,7 @@ def calculate_af(params):
             "af_vib": round(af_vib, 4),
             "af_uv": round(af_uv, 4),
             "af_chem": round(af_chem, 4),
+            "af_rad": round(af_rad, 4),
             "af_eyring_correction": round(af_eyring_correction, 4) if enable_eyring else None,
             "af_total": round(af_total, 4)
         }

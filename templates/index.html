@@ -128,20 +128,24 @@
                                             </label>
                                         </div>
                                     </div>
-                                </div>
-                            </div>
-
-                            <!-- 進階選項：Eyring Model -->
-                            <div class="alert alert-info mb-4">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="enable_eyring" onchange="toggleEyringMode()">
-                                    <label class="form-check-label" for="enable_eyring">
-                                        <strong class="text-white">⚙️ 使用 Eyring 模型 (應力交互作用)</strong>
-                                        <div class="small text-warning mt-1">
-                                            適用於高可靠度產品，處理溫度與非熱應力的交互效應<br>
-                                            ⚠️ 需要實驗數據確定交互作用參數 D
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="enable_eyring" onchange="toggleEyringMode()">
+                                            <label class="form-check-label" for="enable_eyring">
+                                                <strong class="text-white">⚙️ Eyring 模型 (應力交互)</strong>
+                                                <div class="small text-warning">適用於高可靠度產品<br>⚠️ 需實驗數據確定參數 D</div>
+                                            </label>
                                         </div>
-                                    </label>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="enable_rad" onchange="toggleAFSection('rad')">
+                                            <label class="form-check-label" for="enable_rad">
+                                                <strong class="text-white">輻射劑量 (Radiation)</strong>
+                                                <div class="small text-warning">僅適用於太空/核環境</div>
+                                            </label>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -150,10 +154,6 @@
                                 <h6 class="text-uppercase text-white mb-3">
                                     <span class="me-2">⚙️</span>EYRING 交互作用參數
                                 </h6>
-                                <div class="alert alert-warning mb-3">
-                                    <strong>說明：</strong>Eyring模型用於溫度與非熱應力（電壓/濕度）有顯著交互作用時<br>
-                                    啟用後將使用廣義Eyring公式計算，而非簡單相乘
-                                </div>
                                 <div class="row g-2 mb-3">
                                     <div class="col-6">
                                         <label class="form-label text-white">主要應力類型</label>
@@ -352,6 +352,35 @@
                                 </div>
                             </div>
 
+                            <!-- 輻射劑量參數 -->
+                            <div id="rad_section" style="display:none;">
+                                <h6 class="text-uppercase text-white mb-3">
+                                    <span class="me-2">☢️</span>輻射劑量參數 (RADIATION DOSE PARAMETERS)
+                                </h6>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label text-white">使用環境累積劑量 (krad)</label>
+                                        <input type="number" class="form-control" id="d_use" value="10" step="1">
+                                        <div class="form-text text-warning small">任務期間累積總游離劑量 (TID)</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">測試累積劑量 (krad)</label>
+                                        <input type="number" class="form-control" id="d_alt" value="100" step="10">
+                                        <div class="form-text text-warning small">輻射加速測試劑量</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">劑量率 (krad/hr)</label>
+                                        <input type="number" class="form-control" id="dose_rate" value="50" step="10">
+                                        <div class="form-text text-warning small">測試劑量率（影響失效機制）</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">劑量敏感度指數 n</label>
+                                        <input type="number" class="form-control" id="n_rad" value="1.0" step="0.1">
+                                        <div class="form-text text-warning small">典型值：0.5-2.0 (器件相關)</div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
 
                         <!-- Tab 2: Test Data -->
@@ -444,6 +473,12 @@
                                 <div class="card glass-card text-center p-3">
                                     <div class="text-muted small">AF (Chemical)</div>
                                     <div class="h4 mb-0 text-white af-result-value" id="res_af_chem">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-lg-2" id="af_rad_card" style="display:none;">
+                                <div class="card glass-card text-center p-3">
+                                    <div class="text-muted small">AF (Radiation)</div>
+                                    <div class="h4 mb-0 text-white af-result-value" id="res_af_rad">-</div>
                                 </div>
                             </div>
                             <div class="col-md-3 col-lg-2">

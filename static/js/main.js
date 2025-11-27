@@ -30,6 +30,12 @@ function toggleAFSection(afType) {
         const isEnabled = document.getElementById('enable_chem').checked;
         chemSection.style.display = isEnabled ? 'block' : 'none';
         chemCard.style.display = isEnabled ? 'block' : 'none';
+    } else if (afType === 'rad') {
+        const radSection = document.getElementById('rad_section');
+        const radCard = document.getElementById('af_rad_card');
+        const isEnabled = document.getElementById('enable_rad').checked;
+        radSection.style.display = isEnabled ? 'block' : 'none';
+        radCard.style.display = isEnabled ? 'block' : 'none';
     }
 }
 
@@ -58,7 +64,8 @@ function calculate() {
         enable_tc: document.getElementById('enable_tc').checked,
         enable_vib: document.getElementById('enable_vib').checked,
         enable_uv: document.getElementById('enable_uv').checked,
-        enable_chem: document.getElementById('enable_chem').checked
+        enable_chem: document.getElementById('enable_chem').checked,
+        enable_rad: document.getElementById('enable_rad').checked
     };
 
     // 如果電壓啟用，添加參數
@@ -96,6 +103,14 @@ function calculate() {
         afParams.c_use = document.getElementById('c_use').value;
         afParams.c_alt = document.getElementById('c_alt').value;
         afParams.n_chem = document.getElementById('n_chem').value;
+    }
+
+    // 如果輻射劑量啟用，添加參數
+    if (afParams.enable_rad) {
+        afParams.d_use = document.getElementById('d_use').value;
+        afParams.d_alt = document.getElementById('d_alt').value;
+        afParams.dose_rate = document.getElementById('dose_rate').value;
+        afParams.n_rad = document.getElementById('n_rad').value;
     }
 
     // 如果Eyring模型啟用，添加參數
@@ -185,6 +200,7 @@ function updateUI(data, hasFailures) {
     adjustAFTextSize('res_af_vib', data.af_result.af_vib || '1.0');
     adjustAFTextSize('res_af_uv', data.af_result.af_uv || '1.0');
     adjustAFTextSize('res_af_chem', data.af_result.af_chem || '1.0');
+    adjustAFTextSize('res_af_rad', data.af_result.af_rad || '1.0');
     adjustAFTextSize('res_af_total', data.af_result.af_total);
 
     const wbStats = document.getElementById('weibull_stats');

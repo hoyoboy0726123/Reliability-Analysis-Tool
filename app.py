@@ -12,23 +12,33 @@ app.config['SEND_FILE_MAX_AGE_DEFAULT'] = 0
 def calculate_af(params):
     """
     計算加速因子 (AF Total)
-    基於 Arrhenius (溫度), Peck (濕度), Inverse Power Law (電壓) 模型
+    基於 Arrhenius (溫度), Peck (濕度), Inverse Power Law (電壓),
+    Coffin-Manson (熱循環), IPL (振動) 模型
     """
     try:
-        # 提取參數
+        # 提取基本參數
         t_use = float(params.get('t_use', 32))
         rh_use = float(params.get('rh_use', 60))
         v_use = float(params.get('v_use', 1.0)) # 假設 V_use = V_rated
-        
+
         t_alt = float(params.get('t_alt', 70))
         rh_alt = float(params.get('rh_alt', 90))
         v_alt = float(params.get('v_alt', 1.0)) # 假設 V_alt = V_rated (或使用者輸入)
-        
+
         ea = float(params.get('ea', 1.0))
         n_hum = float(params.get('n_hum', 2.0))
         beta_v = float(params.get('beta_v', 1.0))
-        
+
         kb = 8.617e-5  # Boltzmann constant eV/K
+
+        # 提取啟用標誌 (預設溫度和濕度啟用，其他停用)
+        enable_temp = params.get('enable_temp', True)
+        enable_hum = params.get('enable_hum', True)
+        enable_voltage = params.get('enable_voltage', False)
+        enable_tc = params.get('enable_tc', False)  # Thermal Cycling
+        enable_vib = params.get('enable_vib', False)  # Vibration
+        enable_uv = params.get('enable_uv', False)  # UV Radiation
+        enable_chem = params.get('enable_chem', False)  # Chemical Concentration
 
         # 溫度轉換 (Celsius to Kelvin)
         temp_use_k = t_use + 273.15
@@ -36,24 +46,87 @@ def calculate_af(params):
 
         # 1. 溫度加速 (AF_T) - Arrhenius
         # Formula: exp( (Ea/k) * (1/T_use - 1/T_alt) )
-        af_t = np.exp((ea / kb) * (1/temp_use_k - 1/temp_alt_k))
+        if enable_temp:
+            af_t = np.exp((ea / kb) * (1/temp_use_k - 1/temp_alt_k))
+        else:
+            af_t = 1.0
 
         # 2. 濕度加速 (AF_RH) - Peck's Model
         # Formula: (RH_alt / RH_use) ^ n
-        af_rh = (rh_alt / rh_use) ** n_hum
+        if enable_hum:
+            af_rh = (rh_alt / rh_use) ** n_hum
+        else:
+            af_rh = 1.0
 
         # 3. 電壓加速 (AF_V) - Inverse Power Law
         # Formula: (V_alt / V_use) ^ beta
         # 注意：若 V_alt 和 V_use 相同，此項為 1
-        af_v = (v_alt / v_use) ** beta_v
+        if enable_voltage:
+            af_v = (v_alt / v_use) ** beta_v
+        else:
+            af_v = 1.0
 
-        # 總加速因子
-        af_total = af_t * af_rh * af_v
-        
+        # 4. 熱循環加速 (AF_TC) - Coffin-Manson Model
+        # Formula: (ΔT_alt / ΔT_use)^β × (f_alt / f_use)^α
+        # 參考：JESD22-A104C, Indium Corporation研究
+        if enable_tc:
+            dt_use = float(params.get('dt_use', 70))  # 使用溫度範圍 (°C)
+            dt_alt = float(params.get('dt_alt', 165))  # 測試溫度範圍 (°C)
+            f_use = float(params.get('f_use', 1/24))  # 使用循環頻率 (cycles/hr), 預設 1次/天
+            f_alt = float(params.get('f_alt', 2))  # 測試循環頻率 (cycles/hr), 預設 2次/hr
+            alpha_tc = float(params.get('alpha_tc', 0.33))  # 頻率指數, 典型值 0.33
+            beta_tc = float(params.get('beta_tc', 1.9))  # 溫度指數, 典型值 1.9 (焊點)
+
+            af_tc = ((dt_alt / dt_use) ** beta_tc) * ((f_alt / f_use) ** alpha_tc)
+        else:
+            af_tc = 1.0
+
+        # 5. 振動加速 (AF_VIB) - Inverse Power Law
+        # Formula: (G_alt / G_use)^n
+        # 參考：JESD22-B103-B
+        if enable_vib:
+            g_use = float(params.get('g_use', 1.0))  # 使用振動加速度 (g)
+            g_alt = float(params.get('g_alt', 20.0))  # 測試振動加速度 (g), JEDEC標準
+            n_vib = float(params.get('n_vib', 8.0))  # 功率指數, 典型值 8.0 (焊點疲勞)
+
+            af_vib = (g_alt / g_use) ** n_vib
+        else:
+            af_vib = 1.0
+
+        # 6. 紫外線輻射加速 (AF_UV) - 實驗比對模型
+        # Formula: t_field / t_accelerated
+        # 參考：ASTM G155, ISO 4892
+        if enable_uv:
+            t_field_uv = float(params.get('t_field_uv', 8760))  # 現場暴露時間 (小時)
+            t_accel_uv = float(params.get('t_accel_uv', 1000))  # 加速測試時間 (小時)
+
+            af_uv = t_field_uv / t_accel_uv
+        else:
+            af_uv = 1.0
+
+        # 7. 化學濃度加速 (AF_CHEM) - Inverse Power Law
+        # Formula: (C_alt / C_use)^n
+        # 參考：Corrosion degradation models
+        if enable_chem:
+            c_use = float(params.get('c_use', 1.0))  # 使用濃度 (相對單位)
+            c_alt = float(params.get('c_alt', 5.0))  # 測試濃度 (相對單位)
+            n_chem = float(params.get('n_chem', 2.0))  # 功率指數, 典型值 1.5-3.0
+
+            af_chem = (c_alt / c_use) ** n_chem
+        else:
+            af_chem = 1.0
+
+        # 總加速因子 (假設應力獨立)
+        af_total = af_t * af_rh * af_v * af_tc * af_vib * af_uv * af_chem
+
         return {
             "af_t": round(af_t, 4),
             "af_rh": round(af_rh, 4),
             "af_v": round(af_v, 4),
+            "af_tc": round(af_tc, 4),
+            "af_vib": round(af_vib, 4),
+            "af_uv": round(af_uv, 4),
+            "af_chem": round(af_chem, 4),
             "af_total": round(af_total, 4)
         }
     except Exception as e:
@@ -221,6 +294,10 @@ def calculate_reliability_results(af_total, weibull_params, zero_fail_params, t_
 @app.route('/')
 def index():
     return render_template('index.html')
+
+@app.route('/guide')
+def guide():
+    return render_template('guide.html')
 
 @app.route('/calculate', methods=['POST'])
 def calculate():

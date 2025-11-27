@@ -1,16 +1,95 @@
+// Toggle function for AF sections and result cards
+function toggleAFSection(afType) {
+    if (afType === 'tc') {
+        const tcSection = document.getElementById('tc_section');
+        const tcCard = document.getElementById('af_tc_card');
+        const isEnabled = document.getElementById('enable_tc').checked;
+        tcSection.style.display = isEnabled ? 'block' : 'none';
+        tcCard.style.display = isEnabled ? 'block' : 'none';
+    } else if (afType === 'vib') {
+        const vibSection = document.getElementById('vib_section');
+        const vibCard = document.getElementById('af_vib_card');
+        const isEnabled = document.getElementById('enable_vib').checked;
+        vibSection.style.display = isEnabled ? 'block' : 'none';
+        vibCard.style.display = isEnabled ? 'block' : 'none';
+    } else if (afType === 'voltage') {
+        const voltageSection = document.getElementById('voltage_section');
+        const vCard = document.getElementById('af_v_card');
+        const isEnabled = document.getElementById('enable_voltage').checked;
+        voltageSection.style.display = isEnabled ? 'block' : 'none';
+        vCard.style.display = isEnabled ? 'block' : 'none';
+    } else if (afType === 'uv') {
+        const uvSection = document.getElementById('uv_section');
+        const uvCard = document.getElementById('af_uv_card');
+        const isEnabled = document.getElementById('enable_uv').checked;
+        uvSection.style.display = isEnabled ? 'block' : 'none';
+        uvCard.style.display = isEnabled ? 'block' : 'none';
+    } else if (afType === 'chem') {
+        const chemSection = document.getElementById('chem_section');
+        const chemCard = document.getElementById('af_chem_card');
+        const isEnabled = document.getElementById('enable_chem').checked;
+        chemSection.style.display = isEnabled ? 'block' : 'none';
+        chemCard.style.display = isEnabled ? 'block' : 'none';
+    }
+}
+
 function calculate() {
-    // 1. 收集 AF 參數
+    // 1. 收集 AF 參數（包含啟用標誌）
     const afParams = {
+        // 基本參數
         t_use: document.getElementById('t_use').value,
         rh_use: document.getElementById('rh_use').value,
-        v_use: document.getElementById('v_use').value,
         t_alt: document.getElementById('t_alt').value,
         rh_alt: document.getElementById('rh_alt').value,
-        v_alt: document.getElementById('v_alt').value,
         ea: document.getElementById('ea').value,
         n_hum: document.getElementById('n_hum').value,
-        beta_v: document.getElementById('beta_v').value
+
+        // 啟用標誌
+        enable_temp: document.getElementById('enable_temp').checked,
+        enable_hum: document.getElementById('enable_hum').checked,
+        enable_voltage: document.getElementById('enable_voltage').checked,
+        enable_tc: document.getElementById('enable_tc').checked,
+        enable_vib: document.getElementById('enable_vib').checked,
+        enable_uv: document.getElementById('enable_uv').checked,
+        enable_chem: document.getElementById('enable_chem').checked
     };
+
+    // 如果電壓啟用，添加參數
+    if (afParams.enable_voltage) {
+        afParams.v_use = document.getElementById('v_use').value;
+        afParams.v_alt = document.getElementById('v_alt').value;
+        afParams.beta_v = document.getElementById('beta_v').value;
+    }
+
+    // 如果熱循環啟用，添加參數
+    if (afParams.enable_tc) {
+        afParams.dt_use = document.getElementById('dt_use').value;
+        afParams.dt_alt = document.getElementById('dt_alt').value;
+        afParams.f_use = document.getElementById('f_use').value;
+        afParams.f_alt = document.getElementById('f_alt').value;
+        afParams.alpha_tc = document.getElementById('alpha_tc').value;
+        afParams.beta_tc = document.getElementById('beta_tc').value;
+    }
+
+    // 如果振動啟用，添加參數
+    if (afParams.enable_vib) {
+        afParams.g_use = document.getElementById('g_use').value;
+        afParams.g_alt = document.getElementById('g_alt').value;
+        afParams.n_vib = document.getElementById('n_vib').value;
+    }
+
+    // 如果UV啟用，添加參數
+    if (afParams.enable_uv) {
+        afParams.t_field_uv = document.getElementById('t_field_uv').value;
+        afParams.t_accel_uv = document.getElementById('t_accel_uv').value;
+    }
+
+    // 如果化學濃度啟用，添加參數
+    if (afParams.enable_chem) {
+        afParams.c_use = document.getElementById('c_use').value;
+        afParams.c_alt = document.getElementById('c_alt').value;
+        afParams.n_chem = document.getElementById('n_chem').value;
+    }
 
     // 2. 收集 Weibull 數據
     const failuresInput = document.getElementById('failures_input').value;
@@ -61,12 +140,36 @@ let currentData = null;
 let currentMode = null; // 'weibull' or 'zero_failure'
 let currentChartType = 'reliability'; // 'reliability', 'hazard', 'pdf'
 
+// 動態調整 AF 結果字體大小的函數
+function adjustAFTextSize(elementId, value) {
+    const elem = document.getElementById(elementId);
+    elem.innerText = value;
+
+    const textLength = value.toString().length;
+    const isTotal = elementId === 'res_af_total';
+
+    // 根據數字長度調整字體大小
+    if (textLength <= 8) {
+        elem.style.fontSize = isTotal ? '1.75rem' : '1.5rem';
+    } else if (textLength <= 12) {
+        elem.style.fontSize = isTotal ? '1.3rem' : '1.1rem';
+    } else if (textLength <= 16) {
+        elem.style.fontSize = isTotal ? '1rem' : '0.9rem';
+    } else {
+        elem.style.fontSize = isTotal ? '0.8rem' : '0.7rem';
+    }
+}
+
 function updateUI(data, hasFailures) {
-    // 更新 AF 結果
-    document.getElementById('res_af_t').innerText = data.af_result.af_t;
-    document.getElementById('res_af_rh').innerText = data.af_result.af_rh;
-    document.getElementById('res_af_v').innerText = data.af_result.af_v;
-    document.getElementById('res_af_total').innerText = data.af_result.af_total;
+    // 更新 AF 結果並動態調整字體大小
+    adjustAFTextSize('res_af_t', data.af_result.af_t);
+    adjustAFTextSize('res_af_rh', data.af_result.af_rh);
+    adjustAFTextSize('res_af_v', data.af_result.af_v);
+    adjustAFTextSize('res_af_tc', data.af_result.af_tc || '1.0');
+    adjustAFTextSize('res_af_vib', data.af_result.af_vib || '1.0');
+    adjustAFTextSize('res_af_uv', data.af_result.af_uv || '1.0');
+    adjustAFTextSize('res_af_chem', data.af_result.af_chem || '1.0');
+    adjustAFTextSize('res_af_total', data.af_result.af_total);
 
     const wbStats = document.getElementById('weibull_stats');
     const zfStats = document.getElementById('zf_stats');

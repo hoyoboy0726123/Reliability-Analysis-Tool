@@ -15,6 +15,16 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     <!-- Plotly.js -->
     <script src="https://cdn.plot.ly/plotly-2.24.1.min.js"></script>
+
+    <!-- AF Result Responsive Font Size -->
+    <style>
+        .af-result-value {
+            word-break: break-word;
+            overflow-wrap: break-word;
+            line-height: 1.1;
+            transition: font-size 0.2s ease;
+        }
+    </style>
 </head>
 
 <body class="dark-theme">
@@ -23,6 +33,11 @@
         <header class="mb-5 text-center">
             <h1 class="display-5 fw-bold text-gradient">Reliability Analysis Suite</h1>
             <p class="text-muted">加速壽命測試 (ALT) · Weibull 分析 · 零失效評估</p>
+            <div class="mt-3">
+                <a href="/guide" class="btn btn-outline-info btn-sm">
+                    📚 參數設定指南
+                </a>
+            </div>
         </header>
 
         <div class="row g-4">
@@ -45,86 +60,281 @@
 
                         <!-- Tab 1: AF Parameters -->
                         <div class="tab-pane fade show active" id="af-panel" role="tabpanel">
-                            <h6 class="text-uppercase text-primary mb-3">現場使用條件 (Use Conditions)</h6>
+                            <h6 class="text-uppercase text-white mb-3">
+                                <span class="me-2">📊</span>加速因子選擇 (ACCELERATION FACTORS)
+                            </h6>
+                            <div class="mb-4 p-3 bg-dark bg-opacity-25 rounded">
+                                <div class="row g-3">
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="enable_temp" checked onchange="toggleAFSection('temp')">
+                                            <label class="form-check-label" for="enable_temp">
+                                                <strong class="text-white">溫度 (Temperature)</strong>
+                                                <div class="small text-warning">Arrhenius 模型</div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="enable_hum" checked onchange="toggleAFSection('hum')">
+                                            <label class="form-check-label" for="enable_hum">
+                                                <strong class="text-white">濕度 (Humidity)</strong>
+                                                <div class="small text-warning">Peck 模型</div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="enable_voltage" onchange="toggleAFSection('voltage')">
+                                            <label class="form-check-label" for="enable_voltage">
+                                                <strong class="text-white">電壓 (Voltage)</strong>
+                                                <div class="small text-warning">指數模型</div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="enable_tc" onchange="toggleAFSection('tc')">
+                                            <label class="form-check-label" for="enable_tc">
+                                                <strong class="text-white">熱循環 (Thermal Cycling)</strong>
+                                                <div class="small text-warning">Coffin-Manson 模型</div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="enable_vib" onchange="toggleAFSection('vib')">
+                                            <label class="form-check-label" for="enable_vib">
+                                                <strong class="text-white">機械振動 (Vibration)</strong>
+                                                <div class="small text-warning">逆冪律模型</div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="enable_uv" onchange="toggleAFSection('uv')">
+                                            <label class="form-check-label" for="enable_uv">
+                                                <strong class="text-white">紫外線輻射 (UV Radiation)</strong>
+                                                <div class="small text-warning">實驗比對模型</div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                    <div class="col-6">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="enable_chem" onchange="toggleAFSection('chem')">
+                                            <label class="form-check-label" for="enable_chem">
+                                                <strong class="text-white">化學濃度 (Chemical)</strong>
+                                                <div class="small text-warning">逆冪律模型</div>
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <h6 class="text-uppercase text-white mb-3">現場使用條件 (USE CONDITIONS)</h6>
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
-                                    <label class="form-label">溫度 (°C)</label>
+                                    <label class="form-label text-white">溫度 (°C)</label>
                                     <input type="number" class="form-control" id="t_use" value="32">
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label">濕度 (%RH)</label>
+                                    <label class="form-label text-white">濕度 (%RH)</label>
                                     <input type="number" class="form-control" id="rh_use" value="60">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label">電壓 (V)</label>
-                                    <input type="number" class="form-control" id="v_use" value="1.0">
                                 </div>
                             </div>
 
-                            <h6 class="text-uppercase text-danger mb-3">加速測試條件 (ALT Conditions)</h6>
+                            <h6 class="text-uppercase text-white mb-3">加速測試條件 (ALT CONDITIONS)</h6>
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
-                                    <label class="form-label">溫度 (°C)</label>
+                                    <label class="form-label text-white">溫度 (°C)</label>
                                     <input type="number" class="form-control" id="t_alt" value="70">
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label">濕度 (%RH)</label>
+                                    <label class="form-label text-white">濕度 (%RH)</label>
                                     <input type="number" class="form-control" id="rh_alt" value="90">
-                                </div>
-                                <div class="col-6">
-                                    <label class="form-label">電壓 (V)</label>
-                                    <input type="number" class="form-control" id="v_alt" value="1.0">
                                 </div>
                             </div>
 
-                            <h6 class="text-uppercase text-info mb-3">模型常數 (Constants)</h6>
-                            <div class="row g-2 mb-3">
-                                <div class="col-4">
-                                    <label class="form-label">Ea (eV)</label>
-                                    <input type="number" class="form-control" id="ea" value="1.0" step="0.1">
-                                </div>
-                                <div class="col-4">
-                                    <label class="form-label">濕度 n</label>
-                                    <input type="number" class="form-control" id="n_hum" value="2.0" step="0.1">
-                                </div>
-                                <div class="col-4">
-                                    <label class="form-label">電壓 β</label>
-                                    <input type="number" class="form-control" id="beta_v" value="1.0" step="0.1">
+                            <!-- 電壓參數 -->
+                            <div id="voltage_section" style="display:none;">
+                                <h6 class="text-uppercase text-white mb-3">
+                                    <span class="me-2">⚡</span>電壓參數 (VOLTAGE PARAMETERS)
+                                </h6>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label text-white">使用電壓 (V)</label>
+                                        <input type="number" class="form-control" id="v_use" value="1.0" step="0.1">
+                                        <div class="form-text text-warning small">典型操作電壓</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">測試電壓 (V)</label>
+                                        <input type="number" class="form-control" id="v_alt" value="1.0" step="0.1">
+                                        <div class="form-text text-warning small">加速測試電壓</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">電壓指數 β</label>
+                                        <input type="number" class="form-control" id="beta_v" value="1.0" step="0.1">
+                                        <div class="form-text text-warning small">典型值：1.0 (逆冪律模型)</div>
+                                    </div>
                                 </div>
                             </div>
+
+                            <h6 class="text-uppercase text-white mb-3">模型常數 (CONSTANTS)</h6>
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label text-white">Ea (eV)</label>
+                                    <input type="number" class="form-control" id="ea" value="1.0" step="0.1">
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label text-white">濕度 n</label>
+                                    <input type="number" class="form-control" id="n_hum" value="2.0" step="0.1">
+                                </div>
+                            </div>
+
+                            <!-- 熱循環參數 -->
+                            <div id="tc_section" style="display:none;">
+                                <h6 class="text-uppercase text-white mb-3">
+                                    <span class="me-2">🔄</span>熱循環參數 (THERMAL CYCLING PARAMETERS)
+                                </h6>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label text-white">使用 ΔT (°C)</label>
+                                        <input type="number" class="form-control" id="dt_use" value="70" step="1">
+                                        <div class="form-text text-warning small">例：0°C ~ 70°C = 70°C</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">測試 ΔT (°C)</label>
+                                        <input type="number" class="form-control" id="dt_alt" value="165" step="1">
+                                        <div class="form-text text-warning small">例：-40°C ~ 125°C = 165°C (JEDEC)</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">使用頻率 (cycles/hr)</label>
+                                        <input type="number" class="form-control" id="f_use" value="0.042" step="0.001">
+                                        <div class="form-text text-warning small">預設：每天開關機1次 (1÷24hr = 0.042)</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">測試頻率 (cycles/hr)</label>
+                                        <input type="number" class="form-control" id="f_alt" value="2" step="0.1">
+                                        <div class="form-text text-warning small">預設：每小時2次 (30分鐘/循環)</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">頻率指數 α</label>
+                                        <input type="number" class="form-control" id="alpha_tc" value="0.33" step="0.01">
+                                        <div class="form-text text-warning small">典型值：0.33 (焊點)</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">溫度指數 β</label>
+                                        <input type="number" class="form-control" id="beta_tc" value="1.9" step="0.1">
+                                        <div class="form-text text-warning small">典型值：1.9 (焊點), 5.0-6.0 (陶瓷)</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 振動參數 -->
+                            <div id="vib_section" style="display:none;">
+                                <h6 class="text-uppercase text-white mb-3">
+                                    <span class="me-2">📳</span>機械振動參數 (VIBRATION PARAMETERS)
+                                </h6>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label text-white">使用加速度 (g)</label>
+                                        <input type="number" class="form-control" id="g_use" value="1.0" step="0.1">
+                                        <div class="form-text text-warning small">一般使用環境：0.5-2.0g</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">測試加速度 (g)</label>
+                                        <input type="number" class="form-control" id="g_alt" value="20" step="1">
+                                        <div class="form-text text-warning small">JEDEC標準：10-20g</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">功率指數 n</label>
+                                        <input type="number" class="form-control" id="n_vib" value="8.0" step="0.1">
+                                        <div class="form-text text-warning small">典型值：8.0 (焊點振動疲勞)</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 紫外線輻射參數 -->
+                            <div id="uv_section" style="display:none;">
+                                <h6 class="text-uppercase text-white mb-3">
+                                    <span class="me-2">☀️</span>紫外線輻射參數 (UV RADIATION PARAMETERS)
+                                </h6>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label text-white">現場暴露時間 (小時)</label>
+                                        <input type="number" class="form-control" id="t_field_uv" value="8760" step="100">
+                                        <div class="form-text text-warning small">預設：1年 = 8760小時</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">加速測試時間 (小時)</label>
+                                        <input type="number" class="form-control" id="t_accel_uv" value="1000" step="10">
+                                        <div class="form-text text-warning small">達到相同退化的測試時間</div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="alert alert-info small mb-0">
+                                            <strong>注意：</strong>UV加速因子需通過實驗比對確定，需控制光譜輸出、溫度和濕度
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- 化學濃度參數 -->
+                            <div id="chem_section" style="display:none;">
+                                <h6 class="text-uppercase text-white mb-3">
+                                    <span class="me-2">🧪</span>化學濃度參數 (CHEMICAL CONCENTRATION PARAMETERS)
+                                </h6>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label text-white">使用濃度 (相對單位)</label>
+                                        <input type="number" class="form-control" id="c_use" value="1.0" step="0.1">
+                                        <div class="form-text text-warning small">標準使用環境濃度（基準值）</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">測試濃度 (相對單位)</label>
+                                        <input type="number" class="form-control" id="c_alt" value="5.0" step="0.1">
+                                        <div class="form-text text-warning small">加速測試濃度</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">功率指數 n</label>
+                                        <input type="number" class="form-control" id="n_chem" value="2.0" step="0.1">
+                                        <div class="form-text text-warning small">典型值：1.5-3.0 (腐蝕/降解)</div>
+                                    </div>
+                                </div>
+                            </div>
+
                         </div>
 
                         <!-- Tab 2: Test Data -->
                         <div class="tab-pane fade" id="data-panel" role="tabpanel">
                             <div class="mb-3">
-                                <label class="form-label text-info">任務時間 (Mission Time) [年]</label>
+                                <label class="form-label text-warning">任務時間 (Mission Time) [年]</label>
                                 <input type="number" class="form-control border-info" id="mission_years" value="2" step="0.5" min="0.5">
-                                <div class="form-text text-muted small">用於計算可靠度 R(t) 與結論</div>
+                                <div class="form-text text-warning small">用於計算可靠度 R(t) 與結論</div>
                             </div>
 
                             <div class="mb-3">
-                                <label class="form-label">總樣品數 (N)</label>
+                                <label class="form-label text-white">總樣品數 (N)</label>
                                 <input type="number" class="form-control" id="n_samples" value="64">
                             </div>
 
                             <hr class="border-secondary">
 
-                            <h6 class="text-uppercase text-warning mb-2">情境 A: 有失效數據 (Weibull)</h6>
-                            <p class="small text-muted mb-1">輸入失效時間 (TTF)，以逗號或空格分隔。</p>
+                            <h6 class="text-uppercase text-white mb-2">情境 A: 有失效數據 (WEIBULL)</h6>
+                            <p class="small text-warning mb-1">輸入失效時間 (TTF)，以逗號或空格分隔。</p>
                             <p class="small text-warning mb-2">⚠️ 至少需要 <strong>2 個</strong>失效時間才能進行 Weibull 分析 (建議 5 個以上)</p>
                             <textarea class="form-control font-monospace mb-3" id="failures_input" rows="5"
                                 placeholder="例如: 100, 150, 200, 250, 300 (至少 2 個)"></textarea>
 
                             <hr class="border-secondary">
 
-                            <h6 class="text-uppercase text-success mb-2">情境 B: 零失效 (Zero-Failure)</h6>
+                            <h6 class="text-uppercase text-white mb-2">情境 B: 零失效 (ZERO-FAILURE)</h6>
                             <div class="row g-2">
                                 <div class="col-6">
-                                    <label class="form-label">測試時長 (Hrs)</label>
+                                    <label class="form-label text-white">測試時長 (Hrs)</label>
                                     <input type="number" class="form-control" id="t_test" value="1196">
                                 </div>
                                 <div class="col-6">
-                                    <label class="form-label">信心水準 (0-1)</label>
+                                    <label class="form-label text-white">信心水準 (0-1)</label>
                                     <input type="number" class="form-control" id="cl" value="0.6" step="0.05">
                                 </div>
                             </div>
@@ -143,29 +353,53 @@
             <!-- 右側：結果儀表板 -->
                     <div class="col-lg-8">
                         <!-- 1. 加速因子結果 -->
-                        <div class="row mb-4">
-                            <div class="col-md-3">
+                        <div class="row g-3 mb-4" id="af_results_container">
+                            <div class="col-md-3 col-lg-2">
                                 <div class="card glass-card text-center p-3">
                                     <div class="text-muted small">AF (Temp)</div>
-                                    <div class="h4 mb-0 text-white" id="res_af_t">-</div>
+                                    <div class="h4 mb-0 text-white af-result-value" id="res_af_t">-</div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-3 col-lg-2">
                                 <div class="card glass-card text-center p-3">
                                     <div class="text-muted small">AF (Humidity)</div>
-                                    <div class="h4 mb-0 text-white" id="res_af_rh">-</div>
+                                    <div class="h4 mb-0 text-white af-result-value" id="res_af_rh">-</div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-3 col-lg-2" id="af_v_card" style="display:none;">
                                 <div class="card glass-card text-center p-3">
                                     <div class="text-muted small">AF (Voltage)</div>
-                                    <div class="h4 mb-0 text-white" id="res_af_v">-</div>
+                                    <div class="h4 mb-0 text-white af-result-value" id="res_af_v">-</div>
                                 </div>
                             </div>
-                            <div class="col-md-3">
+                            <div class="col-md-3 col-lg-2" id="af_tc_card" style="display:none;">
+                                <div class="card glass-card text-center p-3">
+                                    <div class="text-muted small">AF (T-Cycle)</div>
+                                    <div class="h4 mb-0 text-white af-result-value" id="res_af_tc">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-lg-2" id="af_vib_card" style="display:none;">
+                                <div class="card glass-card text-center p-3">
+                                    <div class="text-muted small">AF (Vibration)</div>
+                                    <div class="h4 mb-0 text-white af-result-value" id="res_af_vib">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-lg-2" id="af_uv_card" style="display:none;">
+                                <div class="card glass-card text-center p-3">
+                                    <div class="text-muted small">AF (UV)</div>
+                                    <div class="h4 mb-0 text-white af-result-value" id="res_af_uv">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-lg-2" id="af_chem_card" style="display:none;">
+                                <div class="card glass-card text-center p-3">
+                                    <div class="text-muted small">AF (Chemical)</div>
+                                    <div class="h4 mb-0 text-white af-result-value" id="res_af_chem">-</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3 col-lg-2">
                                 <div class="card glass-card bg-primary-gradient text-center p-3">
                                     <div class="text-white-50 small">AF Total</div>
-                                    <div class="h3 mb-0 text-white fw-bold" id="res_af_total">-</div>
+                                    <div class="h3 mb-0 text-white fw-bold af-result-value" id="res_af_total">-</div>
                                 </div>
                             </div>
                         </div>

@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(python test_af_compatibility.py:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

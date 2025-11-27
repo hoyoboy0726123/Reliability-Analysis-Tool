@@ -1,0 +1,1320 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>參數設定指南 - Reliability Analysis Suite</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <style>
+        .guide-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 4rem 0;
+            margin-bottom: 3rem;
+            border-radius: 1rem;
+        }
+
+        .search-box {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .filter-chip {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-chip:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .filter-chip.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+            color: white !important;
+        }
+
+        .param-card {
+            transition: all 0.3s;
+            height: 100%;
+        }
+
+        .param-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+        }
+
+        .param-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.75rem;
+            border-radius: 1rem;
+        }
+
+        .formula-box {
+            background: rgba(255,255,255,0.05);
+            border-left: 3px solid #667eea;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            font-family: 'Courier New', monospace;
+        }
+
+        .typical-value-table {
+            font-size: 0.9rem;
+        }
+
+        .reference-link {
+            color: #667eea;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+
+        .reference-link:hover {
+            color: #764ba2;
+        }
+
+        .accordion-button:not(.collapsed) {
+            background: rgba(102, 126, 234, 0.1);
+            color: white;
+        }
+
+        .method-step {
+            background: rgba(255,255,255,0.05);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .warning-box {
+            background: rgba(255, 193, 7, 0.1);
+            border-left: 4px solid #ffc107;
+            padding: 1rem;
+            border-radius: 0.5rem;
+        }
+    </style>
+</head>
+
+<body class="dark-theme">
+    <div class="container-fluid py-4">
+        <!-- Hero Section -->
+        <div class="guide-hero">
+            <div class="container">
+                <div class="text-center text-white">
+                    <h1 class="display-4 fw-bold mb-3">📚 加速因子參數設定指南</h1>
+                    <p class="lead mb-4">完整的參數說明、典型值與參考文獻</p>
+                    <a href="/" class="btn btn-light btn-lg">
+                        ← 返回主頁面
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+            <!-- Search Box -->
+            <div class="search-box mb-4">
+                <input type="text" class="form-control form-control-lg" id="searchInput"
+                       placeholder="🔍 搜索參數名稱或關鍵字...">
+            </div>
+
+            <!-- Filter Chips -->
+            <div class="d-flex flex-wrap gap-2 justify-content-center mb-5">
+                <span class="badge filter-chip active bg-secondary" data-filter="all">
+                    全部
+                </span>
+                <span class="badge filter-chip bg-secondary" data-filter="temperature">
+                    🌡️ 溫度
+                </span>
+                <span class="badge filter-chip bg-secondary" data-filter="humidity">
+                    💧 濕度
+                </span>
+                <span class="badge filter-chip bg-secondary" data-filter="voltage">
+                    ⚡ 電壓
+                </span>
+                <span class="badge filter-chip bg-secondary" data-filter="thermal-cycling">
+                    🔄 熱循環
+                </span>
+                <span class="badge filter-chip bg-secondary" data-filter="vibration">
+                    📳 振動
+                </span>
+                <span class="badge filter-chip bg-secondary" data-filter="uv">
+                    ☀️ 紫外線
+                </span>
+                <span class="badge filter-chip bg-secondary" data-filter="chemical">
+                    🧪 化學
+                </span>
+            </div>
+
+            <!-- Parameter Cards -->
+            <div class="row g-4" id="paramCardsContainer">
+                <!-- Temperature Card -->
+                <div class="col-md-6 col-lg-4 param-card-wrapper" data-category="temperature" data-keywords="溫度 temperature arrhenius 活化能 ea">
+                    <div class="card param-card glass-panel h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title text-white">🌡️ 溫度加速因子</h5>
+                                <span class="param-badge bg-primary">Arrhenius</span>
+                            </div>
+
+                            <div class="formula-box mb-3">
+                                <strong>公式：</strong><br>
+                                AF<sub>T</sub> = exp[(E<sub>a</sub>/k) × (1/T<sub>use</sub> - 1/T<sub>alt</sub>)]
+                            </div>
+
+                            <div class="accordion accordion-flush" id="tempAccordion">
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tempParams">
+                                            📋 參數說明
+                                        </button>
+                                    </h2>
+                                    <div id="tempParams" class="accordion-collapse collapse" data-bs-parent="#tempAccordion">
+                                        <div class="accordion-body">
+                                            <table class="table table-sm table-dark typical-value-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>參數</th>
+                                                        <th>說明</th>
+                                                        <th>典型值</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><strong>T<sub>use</sub></strong></td>
+                                                        <td>使用溫度 (°C)</td>
+                                                        <td>25-35°C</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>T<sub>alt</sub></strong></td>
+                                                        <td>測試溫度 (°C)</td>
+                                                        <td>60-125°C</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>E<sub>a</sub></strong></td>
+                                                        <td>活化能 (eV)</td>
+                                                        <td>0.3-1.2 eV</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tempValues">
+                                            💡 業界標準值
+                                        </button>
+                                    </h2>
+                                    <div id="tempValues" class="accordion-collapse collapse" data-bs-parent="#tempAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">• <strong>電子元件：</strong>E<sub>a</sub> = 0.7-1.0 eV</li>
+                                                <li class="mb-2">• <strong>焊點：</strong>E<sub>a</sub> = 0.5-0.8 eV</li>
+                                                <li class="mb-2">• <strong>塑膠材料：</strong>E<sub>a</sub> = 0.8-1.2 eV</li>
+                                                <li class="mb-2">• <strong>JEDEC 測試溫度：</strong>85°C, 125°C, 150°C</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tempMethod">
+                                            🔧 如何獲取參數
+                                        </button>
+                                    </h2>
+                                    <div id="tempMethod" class="accordion-collapse collapse" data-bs-parent="#tempAccordion">
+                                        <div class="accordion-body">
+                                            <div class="method-step">
+                                                <strong>步驟 1：設計實驗</strong>
+                                                <p class="mb-0 mt-2 small">選擇至少 3 個溫度水平（例如：85°C, 100°C, 125°C），每個溫度測試 20-30 個樣品</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 2：收集失效數據</strong>
+                                                <p class="mb-0 mt-2 small">記錄每個樣品的失效時間 (TTF)</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 3：Arrhenius 繪圖</strong>
+                                                <p class="mb-0 mt-2 small">繪製 ln(MTTF) vs. 1/T，斜率 = -E<sub>a</sub>/k</p>
+                                            </div>
+                                            <div class="warning-box">
+                                                <strong>⚠️ 注意：</strong>
+                                                <p class="mb-0 small">如果無實驗數據，可使用材料供應商提供的 E<sub>a</sub> 值，或參考同類產品文獻</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tempRef">
+                                            📚 參考文獻
+                                        </button>
+                                    </h2>
+                                    <div id="tempRef" class="accordion-collapse collapse" data-bs-parent="#tempAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">
+                                                    <a href="https://s3vi.ndc.nasa.gov/ssri-kb/topics/38/" target="_blank" class="reference-link">
+                                                        → NASA SSRI: Accelerated Life Testing
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://www.jedec.org/standards-documents" target="_blank" class="reference-link">
+                                                        → JEDEC Standards (JESD22-A103)
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://en.wikipedia.org/wiki/Arrhenius_equation" target="_blank" class="reference-link">
+                                                        → Arrhenius Equation (Wikipedia)
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Humidity Card -->
+                <div class="col-md-6 col-lg-4 param-card-wrapper" data-category="humidity" data-keywords="濕度 humidity peck rh 相對濕度">
+                    <div class="card param-card glass-panel h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title text-white">💧 濕度加速因子</h5>
+                                <span class="param-badge bg-info">Peck Model</span>
+                            </div>
+
+                            <div class="formula-box mb-3">
+                                <strong>公式：</strong><br>
+                                AF<sub>RH</sub> = (RH<sub>alt</sub> / RH<sub>use</sub>)<sup>n</sup>
+                            </div>
+
+                            <div class="accordion accordion-flush" id="humAccordion">
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#humParams">
+                                            📋 參數說明
+                                        </button>
+                                    </h2>
+                                    <div id="humParams" class="accordion-collapse collapse" data-bs-parent="#humAccordion">
+                                        <div class="accordion-body">
+                                            <table class="table table-sm table-dark typical-value-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>參數</th>
+                                                        <th>說明</th>
+                                                        <th>典型值</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><strong>RH<sub>use</sub></strong></td>
+                                                        <td>使用濕度 (%RH)</td>
+                                                        <td>50-70%</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>RH<sub>alt</sub></strong></td>
+                                                        <td>測試濕度 (%RH)</td>
+                                                        <td>85-95%</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>n</strong></td>
+                                                        <td>濕度指數</td>
+                                                        <td>2.0-3.0</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#humValues">
+                                            💡 業界標準值
+                                        </button>
+                                    </h2>
+                                    <div id="humValues" class="accordion-collapse collapse" data-bs-parent="#humAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">• <strong>一般電子產品：</strong>n = 2.0-2.5</li>
+                                                <li class="mb-2">• <strong>PCB 腐蝕：</strong>n = 2.5-3.0</li>
+                                                <li class="mb-2">• <strong>JEDEC HAST：</strong>130°C / 85% RH</li>
+                                                <li class="mb-2">• <strong>THB (溫濕偏壓)：</strong>85°C / 85% RH</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#humMethod">
+                                            🔧 如何獲取參數
+                                        </button>
+                                    </h2>
+                                    <div id="humMethod" class="accordion-collapse collapse" data-bs-parent="#humAccordion">
+                                        <div class="accordion-body">
+                                            <div class="method-step">
+                                                <strong>步驟 1：固定溫度</strong>
+                                                <p class="mb-0 mt-2 small">選擇一個測試溫度（例如 85°C）</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 2：濕度變化</strong>
+                                                <p class="mb-0 mt-2 small">測試 3-4 個濕度水平（例如：60%, 75%, 85%, 95%）</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 3：參數估計</strong>
+                                                <p class="mb-0 mt-2 small">繪製 ln(MTTF) vs. ln(RH)，斜率 = -n</p>
+                                            </div>
+                                            <div class="warning-box">
+                                                <strong>⚠️ 注意：</strong>
+                                                <p class="mb-0 small">濕度與溫度常有交互作用，建議使用 Peck 完整模型（溫度+濕度）</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#humRef">
+                                            📚 參考文獻
+                                        </button>
+                                    </h2>
+                                    <div id="humRef" class="accordion-collapse collapse" data-bs-parent="#humAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">
+                                                    <a href="https://www.jedec.org/standards-documents/docs/jesd-22-a110" target="_blank" class="reference-link">
+                                                        → JESD22-A110 (HAST)
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://www.jedec.org/standards-documents/docs/jesd-22-a101" target="_blank" class="reference-link">
+                                                        → JESD22-A101 (THB Test)
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Voltage Card -->
+                <div class="col-md-6 col-lg-4 param-card-wrapper" data-category="voltage" data-keywords="電壓 voltage 指數 beta 逆冪律">
+                    <div class="card param-card glass-panel h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title text-white">⚡ 電壓加速因子</h5>
+                                <span class="param-badge bg-warning text-dark">IPL Model</span>
+                            </div>
+
+                            <div class="formula-box mb-3">
+                                <strong>公式：</strong><br>
+                                AF<sub>V</sub> = (V<sub>alt</sub> / V<sub>use</sub>)<sup>β</sup>
+                            </div>
+
+                            <div class="accordion accordion-flush" id="voltAccordion">
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#voltParams">
+                                            📋 參數說明
+                                        </button>
+                                    </h2>
+                                    <div id="voltParams" class="accordion-collapse collapse" data-bs-parent="#voltAccordion">
+                                        <div class="accordion-body">
+                                            <table class="table table-sm table-dark typical-value-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>參數</th>
+                                                        <th>說明</th>
+                                                        <th>典型值</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><strong>V<sub>use</sub></strong></td>
+                                                        <td>額定電壓 (V)</td>
+                                                        <td>產品規格</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>V<sub>alt</sub></strong></td>
+                                                        <td>測試電壓 (V)</td>
+                                                        <td>1.1-1.5× V<sub>rated</sub></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>β</strong></td>
+                                                        <td>電壓指數</td>
+                                                        <td>1.0-5.0</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#voltValues">
+                                            💡 業界標準值
+                                        </button>
+                                    </h2>
+                                    <div id="voltValues" class="accordion-collapse collapse" data-bs-parent="#voltAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">• <strong>保守估計：</strong>β = 1.0</li>
+                                                <li class="mb-2">• <strong>電介質擊穿：</strong>β = 2.4-2.7</li>
+                                                <li class="mb-2">• <strong>電遷移：</strong>β = 1.5-3.0</li>
+                                                <li class="mb-2">• <strong>測試電壓：</strong>不超過 1.5× V<sub>rated</sub></li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#voltMethod">
+                                            🔧 如何獲取參數
+                                        </button>
+                                    </h2>
+                                    <div id="voltMethod" class="accordion-collapse collapse" data-bs-parent="#voltAccordion">
+                                        <div class="accordion-body">
+                                            <div class="method-step">
+                                                <strong>步驟 1：選擇電壓水平</strong>
+                                                <p class="mb-0 mt-2 small">通常選擇 3-4 個電壓水平（例如：1.0V, 1.1V, 1.2V, 1.3V）</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 2：固定溫度</strong>
+                                                <p class="mb-0 mt-2 small">在相同溫度下進行測試</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 3：IPL 繪圖</strong>
+                                                <p class="mb-0 mt-2 small">繪製 ln(MTTF) vs. ln(V)，斜率 = -β</p>
+                                            </div>
+                                            <div class="warning-box">
+                                                <strong>⚠️ 注意：</strong>
+                                                <p class="mb-0 small">過高電壓可能改變失效機制，建議不超過額定電壓的 150%</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#voltRef">
+                                            📚 參考文獻
+                                        </button>
+                                    </h2>
+                                    <div id="voltRef" class="accordion-collapse collapse" data-bs-parent="#voltAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">
+                                                    <a href="https://www.analog.com/media/en/technical-documentation/reliability-data/ds2480b.pdf" target="_blank" class="reference-link">
+                                                        → Analog Devices: Voltage Acceleration
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://help.reliasoft.com/reference/accelerated_life_testing_data_analysis/alt/inverse_power_law_relationship.html" target="_blank" class="reference-link">
+                                                        → Inverse Power Law (ReliaSoft)
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thermal Cycling Card -->
+                <div class="col-md-6 col-lg-4 param-card-wrapper" data-category="thermal-cycling" data-keywords="熱循環 thermal cycling coffin manson 焊點 溫度範圍">
+                    <div class="card param-card glass-panel h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title text-white">🔄 熱循環加速因子</h5>
+                                <span class="param-badge bg-success">Coffin-Manson</span>
+                            </div>
+
+                            <div class="formula-box mb-3">
+                                <strong>公式：</strong><br>
+                                AF<sub>TC</sub> = (ΔT<sub>alt</sub>/ΔT<sub>use</sub>)<sup>β</sup> × (f<sub>alt</sub>/f<sub>use</sub>)<sup>α</sup>
+                            </div>
+
+                            <div class="accordion accordion-flush" id="tcAccordion">
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tcParams">
+                                            📋 參數說明
+                                        </button>
+                                    </h2>
+                                    <div id="tcParams" class="accordion-collapse collapse" data-bs-parent="#tcAccordion">
+                                        <div class="accordion-body">
+                                            <table class="table table-sm table-dark typical-value-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>參數</th>
+                                                        <th>說明</th>
+                                                        <th>典型值</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><strong>ΔT<sub>use</sub></strong></td>
+                                                        <td>使用溫度範圍 (°C)</td>
+                                                        <td>50-80°C</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>ΔT<sub>alt</sub></strong></td>
+                                                        <td>測試溫度範圍 (°C)</td>
+                                                        <td>100-165°C</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>f<sub>use</sub></strong></td>
+                                                        <td>使用頻率 (cycles/hr)</td>
+                                                        <td>0.042 (1次/天)</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>f<sub>alt</sub></strong></td>
+                                                        <td>測試頻率 (cycles/hr)</td>
+                                                        <td>1-3 cycles/hr</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>α</strong></td>
+                                                        <td>頻率指數</td>
+                                                        <td>0.33</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>β</strong></td>
+                                                        <td>溫度指數</td>
+                                                        <td>1.9 (焊點)</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tcValues">
+                                            💡 業界標準值
+                                        </button>
+                                    </h2>
+                                    <div id="tcValues" class="accordion-collapse collapse" data-bs-parent="#tcAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">• <strong>錫鉛焊點 (SnPb)：</strong>β = 1.9, α = 0.33</li>
+                                                <li class="mb-2">• <strong>無鉛焊點 (SAC)：</strong>β = 2.65, α = 0.33</li>
+                                                <li class="mb-2">• <strong>陶瓷材料：</strong>β = 5.0-6.0</li>
+                                                <li class="mb-2">• <strong>JEDEC條件：</strong>-55°C to +125°C (ΔT=180°C)</li>
+                                                <li class="mb-2">• <strong>IPC-9701：</strong>板級可靠度標準</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tcMethod">
+                                            🔧 如何獲取參數
+                                        </button>
+                                    </h2>
+                                    <div id="tcMethod" class="accordion-collapse collapse" data-bs-parent="#tcAccordion">
+                                        <div class="accordion-body">
+                                            <div class="method-step">
+                                                <strong>步驟 1：定義循環剖面</strong>
+                                                <p class="mb-0 mt-2 small">確定最高/最低溫度和駐留時間（例如：-40°C/30min → +125°C/30min）</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 2：測試多個ΔT</strong>
+                                                <p class="mb-0 mt-2 small">使用 3 種不同的 ΔT（例如：100°C, 140°C, 180°C）</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 3：記錄失效循環數</strong>
+                                                <p class="mb-0 mt-2 small">定期檢查（例如：每100循環）直到失效</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 4：參數擬合</strong>
+                                                <p class="mb-0 mt-2 small">使用 Coffin-Manson 模型擬合 β 和 α</p>
+                                            </div>
+                                            <div class="warning-box">
+                                                <strong>⚠️ 注意：</strong>
+                                                <p class="mb-0 small">頻率效應：過快循環可能低估現場壽命（蠕變效應）</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#tcRef">
+                                            📚 參考文獻
+                                        </button>
+                                    </h2>
+                                    <div id="tcRef" class="accordion-collapse collapse" data-bs-parent="#tcAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">
+                                                    <a href="https://www.jedec.org/standards-documents/docs/jesd-22-a104" target="_blank" class="reference-link">
+                                                        → JESD22-A104C (Thermal Cycling)
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://www.ipc.org/ipc-9701" target="_blank" class="reference-link">
+                                                        → IPC-9701 (Board-Level Reliability)
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://www.indium.com/blog/acceleration-factors-in-life-testing-of-electronics/" target="_blank" class="reference-link">
+                                                        → Indium Corporation: TC Acceleration
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vibration Card -->
+                <div class="col-md-6 col-lg-4 param-card-wrapper" data-category="vibration" data-keywords="振動 vibration 加速度 g ipl 機械應力">
+                    <div class="card param-card glass-panel h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title text-white">📳 振動加速因子</h5>
+                                <span class="param-badge bg-danger">IPL Model</span>
+                            </div>
+
+                            <div class="formula-box mb-3">
+                                <strong>公式：</strong><br>
+                                AF<sub>VIB</sub> = (G<sub>alt</sub> / G<sub>use</sub>)<sup>n</sup>
+                            </div>
+
+                            <div class="accordion accordion-flush" id="vibAccordion">
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#vibParams">
+                                            📋 參數說明
+                                        </button>
+                                    </h2>
+                                    <div id="vibParams" class="accordion-collapse collapse" data-bs-parent="#vibAccordion">
+                                        <div class="accordion-body">
+                                            <table class="table table-sm table-dark typical-value-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>參數</th>
+                                                        <th>說明</th>
+                                                        <th>典型值</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><strong>G<sub>use</sub></strong></td>
+                                                        <td>使用加速度 (g)</td>
+                                                        <td>0.5-2.0 g</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>G<sub>alt</sub></strong></td>
+                                                        <td>測試加速度 (g)</td>
+                                                        <td>10-20 g</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>n</strong></td>
+                                                        <td>功率指數</td>
+                                                        <td>6.0-12.0</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#vibValues">
+                                            💡 業界標準值
+                                        </button>
+                                    </h2>
+                                    <div id="vibValues" class="accordion-collapse collapse" data-bs-parent="#vibAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">• <strong>焊點疲勞：</strong>n = 8.0-10.0</li>
+                                                <li class="mb-2">• <strong>PCB 裂紋：</strong>n = 6.0-8.0</li>
+                                                <li class="mb-2">• <strong>一般桌上環境：</strong>G<sub>use</sub> = 0.5-1.0 g</li>
+                                                <li class="mb-2">• <strong>汽車環境：</strong>G<sub>use</sub> = 2.0-5.0 g</li>
+                                                <li class="mb-2">• <strong>JEDEC測試：</strong>10-20 g (200-2000 Hz)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#vibMethod">
+                                            🔧 如何獲取參數
+                                        </button>
+                                    </h2>
+                                    <div id="vibMethod" class="accordion-collapse collapse" data-bs-parent="#vibAccordion">
+                                        <div class="accordion-body">
+                                            <div class="method-step">
+                                                <strong>步驟 1：振動頻譜分析</strong>
+                                                <p class="mb-0 mt-2 small">使用加速度計測量實際使用環境的振動頻譜</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 2：設計振動測試</strong>
+                                                <p class="mb-0 mt-2 small">選擇 3-4 個加速度水平（例如：5g, 10g, 15g, 20g）</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 3：振動台測試</strong>
+                                                <p class="mb-0 mt-2 small">掃頻或隨機振動測試，記錄失效時間</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 4：參數估計</strong>
+                                                <p class="mb-0 mt-2 small">繪製 ln(MTTF) vs. ln(G)，斜率 = -n</p>
+                                            </div>
+                                            <div class="warning-box">
+                                                <strong>⚠️ 注意：</strong>
+                                                <p class="mb-0 small">振動測試需要專業設備（振動台），建議委託測試實驗室</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#vibRef">
+                                            📚 參考文獻
+                                        </button>
+                                    </h2>
+                                    <div id="vibRef" class="accordion-collapse collapse" data-bs-parent="#vibAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">
+                                                    <a href="https://www.jedec.org/standards-documents/docs/jesd-22-b103" target="_blank" class="reference-link">
+                                                        → JESD22-B103B (Vibration Testing)
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://www.mil-std-810.com/MIL-STD-810G.pdf" target="_blank" class="reference-link">
+                                                        → MIL-STD-810 (Military Standard)
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- UV Radiation Card -->
+                <div class="col-md-6 col-lg-4 param-card-wrapper" data-category="uv" data-keywords="紫外線 uv radiation 光老化 戶外">
+                    <div class="card param-card glass-panel h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title text-white">☀️ UV輻射加速因子</h5>
+                                <span class="param-badge bg-warning text-dark">實驗比對</span>
+                            </div>
+
+                            <div class="formula-box mb-3">
+                                <strong>公式：</strong><br>
+                                AF<sub>UV</sub> = t<sub>field</sub> / t<sub>accelerated</sub>
+                            </div>
+
+                            <div class="accordion accordion-flush" id="uvAccordion">
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#uvParams">
+                                            📋 參數說明
+                                        </button>
+                                    </h2>
+                                    <div id="uvParams" class="accordion-collapse collapse" data-bs-parent="#uvAccordion">
+                                        <div class="accordion-body">
+                                            <table class="table table-sm table-dark typical-value-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>參數</th>
+                                                        <th>說明</th>
+                                                        <th>典型值</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><strong>t<sub>field</sub></strong></td>
+                                                        <td>現場暴露時間 (小時)</td>
+                                                        <td>8760 (1年)</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>t<sub>accelerated</sub></strong></td>
+                                                        <td>達到相同退化的測試時間</td>
+                                                        <td>500-2000小時</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#uvValues">
+                                            💡 經驗參考值
+                                        </button>
+                                    </h2>
+                                    <div id="uvValues" class="accordion-collapse collapse" data-bs-parent="#uvAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">• <strong>QUV測試：</strong>1000小時 ≈ 戶外 1-2年</li>
+                                                <li class="mb-2">• <strong>Xenon Arc：</strong>1000小時 ≈ 戶外 6-12個月</li>
+                                                <li class="mb-2">• <strong>塗料/塑膠：</strong>AF = 5-15 (產品特定)</li>
+                                                <li class="mb-2">• <strong>測試條件：</strong>340nm, 0.89 W/m², 60°C</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#uvMethod">
+                                            🔧 如何獲取參數
+                                        </button>
+                                    </h2>
+                                    <div id="uvMethod" class="accordion-collapse collapse" data-bs-parent="#uvAccordion">
+                                        <div class="accordion-body">
+                                            <div class="method-step">
+                                                <strong>步驟 1：定義失效標準</strong>
+                                                <p class="mb-0 mt-2 small">例如：光澤度降低50%、顏色變化ΔE≥5、拉伸強度下降20%</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 2：現場暴露</strong>
+                                                <p class="mb-0 mt-2 small">將樣品放置在實際戶外環境（如屋頂），定期檢測性能</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 3：加速測試</strong>
+                                                <p class="mb-0 mt-2 small">使用 QUV 或 Xenon 測試箱，控制：<br>
+                                                • 光譜輸出（模擬太陽光）<br>
+                                                • 溫度（60-70°C）<br>
+                                                • 濕度（50-75% RH）<br>
+                                                • 循環模式（UV/冷凝）</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 4：比對計算</strong>
+                                                <p class="mb-0 mt-2 small">當兩者達到相同失效標準時：<br>
+                                                AF = t<sub>field</sub> / t<sub>accelerated</sub></p>
+                                            </div>
+                                            <div class="warning-box">
+                                                <strong>⚠️ 重要限制：</strong>
+                                                <p class="mb-0 small">
+                                                • UV加速因子<strong>無法純理論計算</strong>，必須實驗確定<br>
+                                                • <strong>產品特定性</strong>：不同材料的AF差異很大<br>
+                                                • 高度加速可能改變失效機制<br>
+                                                • 建議查詢材料供應商數據或同類產品文獻
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#uvRef">
+                                            📚 參考文獻
+                                        </button>
+                                    </h2>
+                                    <div id="uvRef" class="accordion-collapse collapse" data-bs-parent="#uvAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">
+                                                    <a href="https://www.astm.org/g0155-13.html" target="_blank" class="reference-link">
+                                                        → ASTM G155 (Xenon Arc Exposure)
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://www.iso.org/standard/66187.html" target="_blank" class="reference-link">
+                                                        → ISO 4892 (Plastics Weathering)
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://www.atlas-mts.com/knowledge-center/atlas-weathering-blog/2024/december/weathering-basics-i-acceleration-" target="_blank" class="reference-link">
+                                                        → Atlas: Weathering Basics
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://www.paint.org/coatingstech-magazine/articles/analytical-series-principles-of-accelerated-weathering-evaluations-of-coatings/" target="_blank" class="reference-link">
+                                                        → Accelerated Weathering Principles
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chemical Concentration Card -->
+                <div class="col-md-6 col-lg-4 param-card-wrapper" data-category="chemical" data-keywords="化學 chemical 濃度 concentration 腐蝕 corrosion">
+                    <div class="card param-card glass-panel h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title text-white">🧪 化學濃度加速因子</h5>
+                                <span class="param-badge bg-info">IPL Model</span>
+                            </div>
+
+                            <div class="formula-box mb-3">
+                                <strong>公式：</strong><br>
+                                AF<sub>CHEM</sub> = (C<sub>alt</sub> / C<sub>use</sub>)<sup>n</sup>
+                            </div>
+
+                            <div class="accordion accordion-flush" id="chemAccordion">
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#chemParams">
+                                            📋 參數說明
+                                        </button>
+                                    </h2>
+                                    <div id="chemParams" class="accordion-collapse collapse" data-bs-parent="#chemAccordion">
+                                        <div class="accordion-body">
+                                            <table class="table table-sm table-dark typical-value-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>參數</th>
+                                                        <th>說明</th>
+                                                        <th>典型值</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><strong>C<sub>use</sub></strong></td>
+                                                        <td>使用濃度 (相對單位)</td>
+                                                        <td>1.0 (基準)</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>C<sub>alt</sub></strong></td>
+                                                        <td>測試濃度 (相對單位)</td>
+                                                        <td>3-10倍</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>n</strong></td>
+                                                        <td>功率指數</td>
+                                                        <td>1.5-3.0</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#chemValues">
+                                            💡 業界標準值
+                                        </button>
+                                    </h2>
+                                    <div id="chemValues" class="accordion-collapse collapse" data-bs-parent="#chemAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">• <strong>金屬腐蝕：</strong>n = 2.0-2.5</li>
+                                                <li class="mb-2">• <strong>聚合物降解：</strong>n = 1.5-2.0</li>
+                                                <li class="mb-2">• <strong>鹽霧測試：</strong>5% NaCl溶液</li>
+                                                <li class="mb-2">• <strong>相對濃度：</strong>以標準環境為基準 (1.0)</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#chemMethod">
+                                            🔧 如何獲取參數
+                                        </button>
+                                    </h2>
+                                    <div id="chemMethod" class="accordion-collapse collapse" data-bs-parent="#chemAccordion">
+                                        <div class="accordion-body">
+                                            <div class="method-step">
+                                                <strong>步驟 1：定義基準濃度</strong>
+                                                <p class="mb-0 mt-2 small">確定實際使用環境的化學物質濃度作為 C<sub>use</sub> = 1.0</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 2：濃度梯度測試</strong>
+                                                <p class="mb-0 mt-2 small">測試 3-4 個濃度水平（例如：1×, 3×, 5×, 10×）</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 3：固定溫度</strong>
+                                                <p class="mb-0 mt-2 small">在相同溫度下進行測試（通常結合 Arrhenius 模型）</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 4：參數估計</strong>
+                                                <p class="mb-0 mt-2 small">繪製 ln(MTTF) vs. ln(C)，斜率 = -n</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 5：濃度監測</strong>
+                                                <p class="mb-0 mt-2 small">使用 Beer-Lambert 定律監測溶液濃度：<br>
+                                                A = ε × l × c</p>
+                                            </div>
+                                            <div class="warning-box">
+                                                <strong>⚠️ 注意：</strong>
+                                                <p class="mb-0 small">
+                                                • 化學加速常與溫度有交互作用<br>
+                                                • 過高濃度可能改變失效機制<br>
+                                                • 需控制溶液 pH 值和氧氣濃度
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#chemRef">
+                                            📚 參考文獻
+                                        </button>
+                                    </h2>
+                                    <div id="chemRef" class="accordion-collapse collapse" data-bs-parent="#chemAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">
+                                                    <a href="https://www.astm.org/b0117-19.html" target="_blank" class="reference-link">
+                                                        → ASTM B117 (Salt Spray Test)
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://help.reliasoft.com/reference/accelerated_life_testing_data_analysis/alt/inverse_power_law_relationship.html" target="_blank" class="reference-link">
+                                                        → Inverse Power Law (ReliaSoft)
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Eyring Model Card -->
+                <div class="col-md-6 col-lg-4 param-card-wrapper" data-category="advanced" data-keywords="eyring 交互作用 multi-stress 複合應力">
+                    <div class="card param-card glass-panel h-100 border border-warning">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title text-white">⚙️ Eyring 模型 (進階)</h5>
+                                <span class="param-badge bg-warning text-dark">應力交互</span>
+                            </div>
+
+                            <div class="formula-box mb-3">
+                                <strong>廣義 Eyring 公式：</strong><br>
+                                t = A × (1/S)<sup>B</sup> × e<sup>E<sub>a</sub>/kT</sup> × e<sup>D×S/T</sup>
+                            </div>
+
+                            <div class="alert alert-warning mb-3">
+                                <strong>🎓 進階用途：</strong><br>
+                                用於處理應力之間<strong>有交互作用</strong>的複雜情況
+                            </div>
+
+                            <div class="accordion accordion-flush" id="eyringAccordion">
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#eyringWhen">
+                                            🤔 何時使用 Eyring
+                                        </button>
+                                    </h2>
+                                    <div id="eyringWhen" class="accordion-collapse collapse" data-bs-parent="#eyringAccordion">
+                                        <div class="accordion-body">
+                                            <h6 class="text-warning">使用情境：</h6>
+                                            <ul>
+                                                <li class="mb-2"><strong>溫度+電壓交互：</strong>高溫加劇電遷移效應</li>
+                                                <li class="mb-2"><strong>溫度+濕度交互：</strong>溫度越高，濕度影響越顯著</li>
+                                                <li class="mb-2"><strong>HAST測試：</strong>高加速應力測試（T-RH-V同時作用）</li>
+                                            </ul>
+
+                                            <h6 class="text-warning mt-3">何時不需要：</h6>
+                                            <ul>
+                                                <li>應力相互獨立（大多數情況）</li>
+                                                <li>單一應力測試</li>
+                                                <li>消費性產品（簡化模型已足夠）</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#eyringParams">
+                                            📋 變數說明
+                                        </button>
+                                    </h2>
+                                    <div id="eyringParams" class="accordion-collapse collapse" data-bs-parent="#eyringAccordion">
+                                        <div class="accordion-body">
+                                            <table class="table table-sm table-dark typical-value-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>變數</th>
+                                                        <th>說明</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><strong>t</strong></td>
+                                                        <td>產品壽命</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>T</strong></td>
+                                                        <td>絕對溫度 (Kelvin)</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>S</strong></td>
+                                                        <td>非熱應力（電壓、濕度等）</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>E<sub>a</sub></strong></td>
+                                                        <td>活化能 (eV)</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>A, B, D</strong></td>
+                                                        <td>模型常數（需實驗確定）</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>D</strong></td>
+                                                        <td>交互作用項常數（關鍵）</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#eyringMethod">
+                                            🔧 如何獲取參數
+                                        </button>
+                                    </h2>
+                                    <div id="eyringMethod" class="accordion-collapse collapse" data-bs-parent="#eyringAccordion">
+                                        <div class="accordion-body">
+                                            <div class="method-step">
+                                                <strong>步驟 1：階乘實驗設計 (DOE)</strong>
+                                                <p class="mb-0 mt-2 small">設計多水平多因子測試矩陣：<br>
+                                                例如：3個溫度 × 3個電壓 = 9組實驗</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 2：每組測試</strong>
+                                                <p class="mb-0 mt-2 small">每個條件至少 20-30 個樣品</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 3：收集失效數據</strong>
+                                                <p class="mb-0 mt-2 small">記錄所有失效時間 (TTF)</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 4：參數擬合</strong>
+                                                <p class="mb-0 mt-2 small">使用專業軟件（ReliaSoft, Minitab）進行最大似然估計 (MLE)</p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 5：模型驗證</strong>
+                                                <p class="mb-0 mt-2 small">在新的應力水平下測試，驗證預測準確性</p>
+                                            </div>
+                                            <div class="warning-box">
+                                                <strong>⚠️ 複雜度警告：</strong>
+                                                <p class="mb-0 small">
+                                                • 需要大量實驗數據（通常 >200 樣品）<br>
+                                                • 需要專業統計軟件<br>
+                                                • 適用於高可靠度產品（軍用、航太）<br>
+                                                • 大多數消費性產品使用簡化模型即可
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#eyringRef">
+                                            📚 參考文獻
+                                        </button>
+                                    </h2>
+                                    <div id="eyringRef" class="accordion-collapse collapse" data-bs-parent="#eyringAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">
+                                                    <a href="https://accendoreliability.com/eyring-model/" target="_blank" class="reference-link">
+                                                        → Accendo Reliability: Eyring Model
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://help.reliasoft.com/reference/accelerated_life_testing_data_analysis/alt/eyring_relationship.html" target="_blank" class="reference-link">
+                                                        → ReliaSoft: Eyring Relationship
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://www.itl.nist.gov/div898/handbook/apr/section1/apr152.htm" target="_blank" class="reference-link">
+                                                        → NIST Handbook: Eyring Model
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://relyence.com/2024/02/20/an-introduction-to-alt-analysis/" target="_blank" class="reference-link">
+                                                        → Relyence: ALT Analysis Introduction
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Search Functionality
+        document.getElementById('searchInput').addEventListener('input', function() {
+            const searchTerm = this.value.toLowerCase();
+            filterCards(searchTerm, 'all');
+        });
+
+        // Filter Chips
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', function() {
+                // Remove active from all chips
+                document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+                // Add active to clicked chip
+                this.classList.add('active');
+
+                const filter = this.getAttribute('data-filter');
+                const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+                filterCards(searchTerm, filter);
+            });
+        });
+
+        function filterCards(searchTerm, category) {
+            const cards = document.querySelectorAll('.param-card-wrapper');
+
+            cards.forEach(card => {
+                const cardCategory = card.getAttribute('data-category');
+                const keywords = card.getAttribute('data-keywords');
+
+                const matchesSearch = searchTerm === '' || keywords.includes(searchTerm);
+                const matchesCategory = category === 'all' || cardCategory === category;
+
+                if (matchesSearch && matchesCategory) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

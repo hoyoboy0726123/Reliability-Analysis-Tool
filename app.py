@@ -116,8 +116,61 @@ def calculate_af(params):
         else:
             af_chem = 1.0
 
-        # 總加速因子 (假設應力獨立)
-        af_total = af_t * af_rh * af_v * af_tc * af_vib * af_uv * af_chem
+        # 8. Eyring 模型 (應力交互作用)
+        # 用於處理溫度與非熱應力的交互效應
+        enable_eyring = params.get('enable_eyring', False)
+        af_eyring_correction = 1.0  # Eyring修正因子
+
+        if enable_eyring:
+            # 提取Eyring參數
+            stress_type = params.get('eyring_stress_type', 'voltage')
+            eyring_d = float(params.get('eyring_d', 0.1))  # 交互作用參數
+            eyring_a = float(params.get('eyring_a', 1000))  # 模型常數A
+            eyring_b = float(params.get('eyring_b', 2.0))   # 應力指數B
+
+            # 根據選擇的應力類型獲取應力值
+            if stress_type == 'voltage':
+                s_use = v_use
+                s_alt = v_alt
+            elif stress_type == 'humidity':
+                s_use = rh_use
+                s_alt = rh_alt
+            else:
+                s_use = 1.0
+                s_alt = 1.0
+
+            # 廣義Eyring模型: t = A × (1/S)^B × e^(Ea/kT) × e^(D×S/T)
+            # 計算使用條件下的壽命 t_use
+            t_use_eyring = (eyring_a *
+                           (1.0 / s_use) ** eyring_b *
+                           np.exp(ea / (kb * temp_use_k)) *
+                           np.exp(eyring_d * s_use / temp_use_k))
+
+            # 計算測試條件下的壽命 t_alt
+            t_alt_eyring = (eyring_a *
+                           (1.0 / s_alt) ** eyring_b *
+                           np.exp(ea / (kb * temp_alt_k)) *
+                           np.exp(eyring_d * s_alt / temp_alt_k))
+
+            # Eyring 加速因子 = t_use / t_alt
+            af_eyring = t_use_eyring / t_alt_eyring
+
+            # 計算Eyring修正因子（相對於簡單相乘的差異）
+            # 簡單模型: AF_simple = AF_T × AF_S
+            if stress_type == 'voltage' and enable_voltage:
+                af_simple = af_t * af_v
+                af_eyring_correction = af_eyring / af_simple if af_simple > 0 else 1.0
+            elif stress_type == 'humidity' and enable_hum:
+                af_simple = af_t * af_rh
+                af_eyring_correction = af_eyring / af_simple if af_simple > 0 else 1.0
+
+        # 總加速因子計算
+        if enable_eyring:
+            # 使用Eyring模型時，應用修正因子
+            af_total = af_t * af_rh * af_v * af_tc * af_vib * af_uv * af_chem * af_eyring_correction
+        else:
+            # 簡化模型：假設應力獨立
+            af_total = af_t * af_rh * af_v * af_tc * af_vib * af_uv * af_chem
 
         return {
             "af_t": round(af_t, 4),
@@ -127,6 +180,7 @@ def calculate_af(params):
             "af_vib": round(af_vib, 4),
             "af_uv": round(af_uv, 4),
             "af_chem": round(af_chem, 4),
+            "af_eyring_correction": round(af_eyring_correction, 4) if enable_eyring else None,
             "af_total": round(af_total, 4)
         }
     except Exception as e:

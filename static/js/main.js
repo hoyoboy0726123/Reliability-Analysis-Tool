@@ -33,6 +33,13 @@ function toggleAFSection(afType) {
     }
 }
 
+// Toggle Eyring model section
+function toggleEyringMode() {
+    const eyringSection = document.getElementById('eyring_section');
+    const isEnabled = document.getElementById('enable_eyring').checked;
+    eyringSection.style.display = isEnabled ? 'block' : 'none';
+}
+
 function calculate() {
     // 1. 收集 AF 參數（包含啟用標誌）
     const afParams = {
@@ -89,6 +96,15 @@ function calculate() {
         afParams.c_use = document.getElementById('c_use').value;
         afParams.c_alt = document.getElementById('c_alt').value;
         afParams.n_chem = document.getElementById('n_chem').value;
+    }
+
+    // 如果Eyring模型啟用，添加參數
+    afParams.enable_eyring = document.getElementById('enable_eyring').checked;
+    if (afParams.enable_eyring) {
+        afParams.eyring_stress_type = document.getElementById('eyring_stress_type').value;
+        afParams.eyring_d = document.getElementById('eyring_d').value;
+        afParams.eyring_a = document.getElementById('eyring_a').value;
+        afParams.eyring_b = document.getElementById('eyring_b').value;
     }
 
     // 2. 收集 Weibull 數據

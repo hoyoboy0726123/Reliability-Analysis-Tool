@@ -131,6 +131,56 @@
                                 </div>
                             </div>
 
+                            <!-- 進階選項：Eyring Model -->
+                            <div class="alert alert-info mb-4">
+                                <div class="form-check">
+                                    <input class="form-check-input" type="checkbox" id="enable_eyring" onchange="toggleEyringMode()">
+                                    <label class="form-check-label" for="enable_eyring">
+                                        <strong class="text-white">⚙️ 使用 Eyring 模型 (應力交互作用)</strong>
+                                        <div class="small text-warning mt-1">
+                                            適用於高可靠度產品，處理溫度與非熱應力的交互效應<br>
+                                            ⚠️ 需要實驗數據確定交互作用參數 D
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- Eyring 參數區 -->
+                            <div id="eyring_section" style="display:none;">
+                                <h6 class="text-uppercase text-white mb-3">
+                                    <span class="me-2">⚙️</span>EYRING 交互作用參數
+                                </h6>
+                                <div class="alert alert-warning mb-3">
+                                    <strong>說明：</strong>Eyring模型用於溫度與非熱應力（電壓/濕度）有顯著交互作用時<br>
+                                    啟用後將使用廣義Eyring公式計算，而非簡單相乘
+                                </div>
+                                <div class="row g-2 mb-3">
+                                    <div class="col-6">
+                                        <label class="form-label text-white">主要應力類型</label>
+                                        <select class="form-select" id="eyring_stress_type">
+                                            <option value="voltage">電壓 (Voltage)</option>
+                                            <option value="humidity">濕度 (Humidity)</option>
+                                        </select>
+                                        <div class="form-text text-warning small">選擇與溫度有交互作用的應力</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">交互作用參數 D</label>
+                                        <input type="number" class="form-control" id="eyring_d" value="0.1" step="0.01">
+                                        <div class="form-text text-warning small">需通過實驗擬合確定</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">模型常數 A</label>
+                                        <input type="number" class="form-control" id="eyring_a" value="1000" step="10">
+                                        <div class="form-text text-warning small">生命常數（實驗擬合）</div>
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label text-white">應力指數 B</label>
+                                        <input type="number" class="form-control" id="eyring_b" value="2.0" step="0.1">
+                                        <div class="form-text text-warning small">非熱應力的冪次</div>
+                                    </div>
+                                </div>
+                            </div>
+
                             <h6 class="text-uppercase text-white mb-3">現場使用條件 (USE CONDITIONS)</h6>
                             <div class="row g-2 mb-3">
                                 <div class="col-6">

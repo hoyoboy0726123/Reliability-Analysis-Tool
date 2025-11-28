@@ -141,6 +141,9 @@
                 <span class="badge filter-chip bg-secondary" data-filter="chemical">
                     🧪 化學
                 </span>
+                <span class="badge filter-chip bg-secondary" data-filter="radiation">
+                    ☢️ 輻射
+                </span>
             </div>
 
             <!-- Parameter Cards -->
@@ -1090,6 +1093,197 @@
                                                 <li class="mb-2">
                                                     <a href="https://help.reliasoft.com/reference/accelerated_life_testing_data_analysis/alt/inverse_power_law_relationship.html" target="_blank" class="reference-link">
                                                         → Inverse Power Law (ReliaSoft)
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Radiation Dose Card -->
+                <div class="col-md-6 col-lg-4 param-card-wrapper" data-category="radiation" data-keywords="輻射 radiation 劑量 dose TID 太空 space 核">
+                    <div class="card param-card glass-panel h-100">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title text-white">☢️ 輻射劑量加速因子</h5>
+                                <span class="param-badge bg-danger">TID Model</span>
+                            </div>
+
+                            <div class="formula-box mb-3">
+                                <strong>公式：</strong><br>
+                                AF<sub>RAD</sub> = (D<sub>alt</sub> / D<sub>use</sub>)<sup>n</sup>
+                            </div>
+
+                            <div class="alert alert-danger mb-3">
+                                <strong>⚠️ 特殊應用：</strong><br>
+                                僅適用於<strong>太空任務</strong>或<strong>核環境</strong>應用
+                            </div>
+
+                            <div class="accordion accordion-flush" id="radAccordion">
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#radParams">
+                                            📋 參數說明
+                                        </button>
+                                    </h2>
+                                    <div id="radParams" class="accordion-collapse collapse" data-bs-parent="#radAccordion">
+                                        <div class="accordion-body">
+                                            <table class="table table-sm table-dark typical-value-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>參數</th>
+                                                        <th>說明</th>
+                                                        <th>典型值</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td><strong>D<sub>use</sub></strong></td>
+                                                        <td>使用環境累積劑量</td>
+                                                        <td>10-150 krad</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>D<sub>alt</sub></strong></td>
+                                                        <td>測試累積劑量</td>
+                                                        <td>100-300 krad</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>劑量率</strong></td>
+                                                        <td>測試劑量率</td>
+                                                        <td>50-200 krad/hr</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>n</strong></td>
+                                                        <td>劑量敏感度指數</td>
+                                                        <td>0.5-2.0</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                            <div class="mt-3">
+                                                <h6 class="text-warning">劑量敏感度指數 n 的意義：</h6>
+                                                <ul class="small">
+                                                    <li><strong>n &lt; 1：</strong>次線性，劑量率效應顯著（退火恢復）</li>
+                                                    <li><strong>n = 1：</strong>線性，標準 TID 模型</li>
+                                                    <li><strong>n &gt; 1：</strong>超線性，高劑量協同效應</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#radValues">
+                                            💡 業界標準值
+                                        </button>
+                                    </h2>
+                                    <div id="radValues" class="accordion-collapse collapse" data-bs-parent="#radAccordion">
+                                        <div class="accordion-body">
+                                            <h6 class="text-warning">太空環境累積劑量 (TID)：</h6>
+                                            <ul class="list-unstyled mb-3">
+                                                <li class="mb-2">• <strong>LEO 低軌：</strong>5-15 krad/year</li>
+                                                <li class="mb-2">• <strong>GEO 同步軌：</strong>30-100 krad/year</li>
+                                                <li class="mb-2">• <strong>極地軌道：</strong>10-20 krad/year</li>
+                                                <li class="mb-2">• <strong>太陽風暴：</strong>可達數倍正常值</li>
+                                            </ul>
+                                            <h6 class="text-warning">典型任務累積劑量：</h6>
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">• <strong>5年 LEO 任務：</strong>50-75 krad</li>
+                                                <li class="mb-2">• <strong>15年 GEO 任務：</strong>450-1500 krad</li>
+                                                <li class="mb-2">• <strong>核設施儀表：</strong>視輻射源距離而定</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#radMethod">
+                                            🔧 如何獲取參數
+                                        </button>
+                                    </h2>
+                                    <div id="radMethod" class="accordion-collapse collapse" data-bs-parent="#radAccordion">
+                                        <div class="accordion-body">
+                                            <div class="method-step">
+                                                <strong>步驟 1：確定任務劑量</strong>
+                                                <p class="mb-0 mt-2 small">
+                                                根據軌道高度、任務時長、屏蔽厚度估算累積 TID<br>
+                                                工具：SPENVIS (ESA), CREME96 (NASA)
+                                                </p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 2：選擇輻射源</strong>
+                                                <p class="mb-0 mt-2 small">
+                                                • Co-60 γ 射線：能量 1.17-1.33 MeV<br>
+                                                • 電子束：可調能量，適合 ELDRS 研究<br>
+                                                • X 射線：低能量，模擬太陽耀斑
+                                                </p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 3：劑量率測試</strong>
+                                                <p class="mb-0 mt-2 small">
+                                                至少測試 3 個劑量率（例如：10, 50, 300 rad/s）<br>
+                                                確定是否存在 <strong>ELDRS</strong> (Enhanced Low Dose Rate Sensitivity)
+                                                </p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 4：劑量梯度測試</strong>
+                                                <p class="mb-0 mt-2 small">
+                                                測試多個累積劑量點（例如：10, 30, 50, 100 krad）<br>
+                                                繪製失效參數 vs. 累積劑量，擬合 n 值
+                                                </p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 5：退火效應</strong>
+                                                <p class="mb-0 mt-2 small">
+                                                輻照後進行室溫或高溫退火（168小時）<br>
+                                                評估參數恢復程度，確定長期效應
+                                                </p>
+                                            </div>
+                                            <div class="warning-box">
+                                                <strong>⚠️ 重要限制：</strong>
+                                                <p class="mb-0 small">
+                                                • <strong>劑量率效應：</strong>低劑量率可能更危險（ELDRS）<br>
+                                                • <strong>器件相關性：</strong>不同製程差異極大<br>
+                                                • <strong>偏壓影響：</strong>必須在工作偏壓下測試<br>
+                                                • <strong>溫度交互：</strong>低溫可能抑制退火恢復
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#radRef">
+                                            📚 參考文獻
+                                        </button>
+                                    </h2>
+                                    <div id="radRef" class="accordion-collapse collapse" data-bs-parent="#radAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">
+                                                    <a href="https://www.mil-std.com/MIL-STD-883.html" target="_blank" class="reference-link">
+                                                        → MIL-STD-883 Method 1019 (TID Testing)
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://escies.org/escc-specs/published/22900.pdf" target="_blank" class="reference-link">
+                                                        → ESCC Basic Specification No. 22900
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://www.spenvis.oma.be/" target="_blank" class="reference-link">
+                                                        → SPENVIS (Space Environment Info System)
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://creme.isde.vanderbilt.edu/" target="_blank" class="reference-link">
+                                                        → CREME96 (Cosmic Ray Effects)
                                                     </a>
                                                 </li>
                                             </ul>

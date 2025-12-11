@@ -228,6 +228,15 @@ function updateUI(data, hasFailures) {
         document.getElementById('wb_rel').innerText = (res.r_mission * 100).toFixed(4) + "%";
         document.getElementById('wb_rel_label').innerText = `Reliability (${missionYears} Years)`;
 
+        // 計算等效現場時間
+        const testTime = parseFloat(document.getElementById('t_test').value) || 0;
+        const afTotal = data.af_result.af_total;
+        const equivalentTime = testTime * afTotal;
+        const equivalentYears = equivalentTime / 8760;
+
+        document.getElementById('wb_eq_time').innerText = equivalentTime.toLocaleString(undefined, {maximumFractionDigits: 2}) + " hrs";
+        document.getElementById('wb_eq_detail').innerText = `≈ ${equivalentYears.toLocaleString(undefined, {maximumFractionDigits: 2})} years (AF: ${afTotal.toLocaleString()} × ${testTime} hrs)`;
+
         document.getElementById('wb_beta').innerText = data.weibull_result.beta;
         document.getElementById('wb_eta').innerText = data.weibull_result.eta_alt;
 
@@ -246,6 +255,15 @@ function updateUI(data, hasFailures) {
             document.getElementById('zf_rel').innerText = (res.r_mission * 100).toFixed(4) + "%";
             document.getElementById('zf_rel_label').innerText = `Reliability (${missionYears} Years)`;
             document.getElementById('zf_cl_display').innerText = (document.getElementById('cl').value * 100) + "%";
+
+            // 計算等效現場時間
+            const testTime = parseFloat(document.getElementById('t_test').value) || 0;
+            const afTotal = data.af_result.af_total;
+            const equivalentTime = testTime * afTotal;
+            const equivalentYears = equivalentTime / 8760;
+
+            document.getElementById('zf_eq_time').innerText = equivalentTime.toLocaleString(undefined, {maximumFractionDigits: 2}) + " hrs";
+            document.getElementById('zf_eq_detail').innerText = `≈ ${equivalentYears.toLocaleString(undefined, {maximumFractionDigits: 2})} years (AF: ${afTotal.toLocaleString()} × ${testTime} hrs)`;
         } else {
             badge.innerText = "Error in Calculation";
             badge.className = "badge bg-danger";

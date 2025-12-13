@@ -649,11 +649,18 @@ async function generatePDFReport() {
         // 導出圖表為圖片
         const plotDiv = document.getElementById('plot');
         if (plotDiv && plotDiv.data && plotDiv.data.length > 0) {
-            reportData.chart_image = await Plotly.toImage(plotDiv, {
-                format: 'png',
-                width: 1200,
-                height: 600
-            });
+            try {
+                console.log('Exporting chart to image...');
+                reportData.chart_image = await Plotly.toImage(plotDiv, {
+                    format: 'png',
+                    width: 1200,
+                    height: 600
+                });
+                console.log('Chart exported successfully');
+            } catch (chartError) {
+                console.error('Failed to export chart:', chartError);
+                reportData.chart_image = null;  // 繼續生成報告，只是沒有圖表
+            }
         }
 
         // 發送請求到後端生成 PDF

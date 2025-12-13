@@ -314,7 +314,7 @@ def generate_reliability_report(data, output_file):
 
     test_info.append([
         'Equivalent Field Time / 等效現場時間:',
-        f"{equivalent_time:,.2f} hours (≈ {equivalent_years:,.2f} years)"
+        f"{equivalent_time:,.2f} hours (~ {equivalent_years:,.2f} years)"
     ])
 
     test_table = Table(test_info, colWidths=[3*inch, 4.5*inch])

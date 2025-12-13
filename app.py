@@ -413,25 +413,40 @@ def calculate():
 def generate_report():
     """生成 PDF 測試報告"""
     try:
+        print("\n=== PDF Report Generation Request ===")
         from report_generator import generate_report_from_request
         from flask import send_file
+        import traceback
 
         # 獲取請求數據
         data = request.get_json()
+        print(f"Received data with keys: {data.keys() if data else 'None'}")
+
+        if not data:
+            print("ERROR: No data received")
+            return jsonify({"error": "No data received"}), 400
 
         # 生成 PDF
+        print("Calling generate_report_from_request...")
         pdf_buffer = generate_report_from_request(data)
+        print("PDF buffer generated successfully")
 
         # 返回 PDF 文件
+        filename = f'Reliability_Test_Report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+        print(f"Sending file: {filename}")
+
         return send_file(
             pdf_buffer,
             mimetype='application/pdf',
             as_attachment=True,
-            download_name=f'Reliability_Test_Report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+            download_name=filename
         )
 
     except Exception as e:
-        return jsonify({"error": str(e)}), 500
+        print(f"\n!!! ERROR in generate_report: {e}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e), "traceback": traceback.format_exc()}), 500
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

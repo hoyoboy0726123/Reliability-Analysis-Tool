@@ -18,18 +18,23 @@ import io
 from PIL import Image as PILImage
 
 # 嘗試註冊中文字體（如果系統有的話）
+CHINESE_FONT = 'Helvetica'  # 默認使用 Helvetica
 try:
     # Windows 系統的微軟正黑體
     pdfmetrics.registerFont(TTFont('MicrosoftJhengHei', 'C:/Windows/Fonts/msjh.ttc'))
     CHINESE_FONT = 'MicrosoftJhengHei'
-except:
+    print("Successfully registered MicrosoftJhengHei font")
+except Exception as e:
+    print(f"Failed to register MicrosoftJhengHei: {e}")
     try:
         # 另一個常見的中文字體
         pdfmetrics.registerFont(TTFont('SimHei', 'C:/Windows/Fonts/simhei.ttf'))
         CHINESE_FONT = 'SimHei'
-    except:
+        print("Successfully registered SimHei font")
+    except Exception as e2:
+        print(f"Failed to register SimHei: {e2}")
         # 如果都失敗，使用 Helvetica（不支援中文，但至少不會報錯）
-        CHINESE_FONT = 'Helvetica'
+        print("Using Helvetica font (no Chinese support)")
 
 def generate_reliability_report(data, output_file):
     """
@@ -39,15 +44,23 @@ def generate_reliability_report(data, output_file):
         data: 包含所有測試數據和結果的字典
         output_file: 輸出文件路徑或文件對象
     """
-    # 創建 PDF 文檔
-    doc = SimpleDocTemplate(
-        output_file,
-        pagesize=A4,
-        rightMargin=30,
-        leftMargin=30,
-        topMargin=40,
-        bottomMargin=40
-    )
+    try:
+        print("Starting PDF generation...")
+        print(f"Data keys: {data.keys()}")
+
+        # 創建 PDF 文檔
+        doc = SimpleDocTemplate(
+            output_file,
+            pagesize=A4,
+            rightMargin=30,
+            leftMargin=30,
+            topMargin=40,
+            bottomMargin=40
+        )
+        print("PDF document created")
+    except Exception as e:
+        print(f"Error creating PDF document: {e}")
+        raise
 
     # 容器，用於存放報告的所有元素
     story = []
@@ -424,7 +437,15 @@ def generate_reliability_report(data, output_file):
     story.append(Paragraph(f"Report generated on {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", footer_style))
 
     # 建立 PDF
-    doc.build(story)
+    try:
+        print("Building PDF...")
+        doc.build(story)
+        print("PDF built successfully")
+    except Exception as e:
+        print(f"Error building PDF: {e}")
+        import traceback
+        traceback.print_exc()
+        raise
 
 def generate_report_from_request(request_data):
     """
@@ -436,13 +457,24 @@ def generate_report_from_request(request_data):
     Returns:
         BytesIO: PDF 文件的二進制流
     """
-    # 創建內存中的 PDF
-    pdf_buffer = io.BytesIO()
+    try:
+        print("Generating report from request...")
+        print(f"Request data type: {type(request_data)}")
 
-    # 生成 PDF
-    generate_reliability_report(request_data, pdf_buffer)
+        # 創建內存中的 PDF
+        pdf_buffer = io.BytesIO()
 
-    # 將指針移到開頭
-    pdf_buffer.seek(0)
+        # 生成 PDF
+        generate_reliability_report(request_data, pdf_buffer)
 
-    return pdf_buffer
+        # 將指針移到開頭
+        pdf_buffer.seek(0)
+
+        print("Report generated successfully")
+        return pdf_buffer
+
+    except Exception as e:
+        print(f"Error in generate_report_from_request: {e}")
+        import traceback
+        traceback.print_exc()
+        raise

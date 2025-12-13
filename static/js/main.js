@@ -235,7 +235,7 @@ function updateUI(data, hasFailures) {
         const equivalentYears = equivalentTime / 8760;
 
         document.getElementById('wb_eq_time').innerText = equivalentTime.toLocaleString(undefined, {maximumFractionDigits: 2}) + " hrs";
-        document.getElementById('wb_eq_detail').innerText = `≈ ${equivalentYears.toLocaleString(undefined, {maximumFractionDigits: 2})} years (AF: ${afTotal.toLocaleString()} × ${testTime} hrs)`;
+        document.getElementById('wb_eq_detail').innerText = `~ ${equivalentYears.toLocaleString(undefined, {maximumFractionDigits: 2})} years (AF: ${afTotal.toLocaleString()} × ${testTime} hrs)`;
 
         document.getElementById('wb_beta').innerText = data.weibull_result.beta;
         document.getElementById('wb_eta').innerText = data.weibull_result.eta_alt;
@@ -263,7 +263,7 @@ function updateUI(data, hasFailures) {
             const equivalentYears = equivalentTime / 8760;
 
             document.getElementById('zf_eq_time').innerText = equivalentTime.toLocaleString(undefined, {maximumFractionDigits: 2}) + " hrs";
-            document.getElementById('zf_eq_detail').innerText = `≈ ${equivalentYears.toLocaleString(undefined, {maximumFractionDigits: 2})} years (AF: ${afTotal.toLocaleString()} × ${testTime} hrs)`;
+            document.getElementById('zf_eq_detail').innerText = `~ ${equivalentYears.toLocaleString(undefined, {maximumFractionDigits: 2})} years (AF: ${afTotal.toLocaleString()} × ${testTime} hrs)`;
         } else {
             badge.innerText = "Error in Calculation";
             badge.className = "badge bg-danger";

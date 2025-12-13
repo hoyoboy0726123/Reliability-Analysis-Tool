@@ -2080,6 +2080,44 @@
 
                                             <h6 class="text-warning mt-3">高 β 值的迷思</h6>
                                             <p class="small">高 β 值（如 β>5）<strong>不一定</strong>是壞事！若 η 足夠大，產品仍可非常可靠。關鍵在於綜合評估 β 和 η。例如：β=10, η=50年 的產品，在前 30 年幾乎不會失效。</p>
+
+                                            <h6 class="text-warning mt-3">📊 Bx% 壽命解讀</h6>
+                                            <div class="formula-box mb-2">
+                                                <strong>定義：</strong> Bx% 壽命表示<strong>累積失效率達到 x% 時的使用時間</strong><br>
+                                                <strong>公式：</strong> B<sub>x</sub> = η × [ln(1/(1-x/100))]<sup>1/β</sup>
+                                            </div>
+                                            <ul class="small">
+                                                <li class="mb-2"><strong>B1% 壽命 (L1)：</strong>1% 的產品已失效的時間點
+                                                    <br>• 是業界常用的<strong>早期失效指標</strong>
+                                                    <br>• 反映產品的<strong>最低保證壽命</strong>
+                                                    <br>• 適用於高可靠度產品規格（如航太、醫療）
+                                                </li>
+                                                <li class="mb-2"><strong>B10% 壽命 (L10)：</strong>10% 的產品已失效的時間點
+                                                    <br>• 機械工程常用（軸承、齒輪）
+                                                    <br>• 預防性維護計劃的參考依據
+                                                </li>
+                                                <li class="mb-2"><strong>B50% 壽命 (中位壽命)：</strong>50% 的產品已失效的時間點
+                                                    <br>• 等於 Median Life = η × (ln2)<sup>1/β</sup>
+                                                    <br>• 代表產品的<strong>典型壽命</strong>
+                                                </li>
+                                            </ul>
+
+                                            <div class="alert alert-warning mt-3 mb-0">
+                                                <strong>💡 實際應用範例：</strong>
+                                                <p class="small mb-2">
+                                                    若分析結果顯示 <strong>B1% = 0.07 年（608 小時）</strong>，而任務時間要求為 2 年：
+                                                </p>
+                                                <ul class="small mb-0">
+                                                    <li>✗ <strong>未達標：</strong>產品在極短時間內就有 1% 失效，遠低於 2 年目標</li>
+                                                    <li>⚠️ <strong>高風險：</strong>若在 2 年任務期間使用，預期可靠度僅 44.39%（失效率 55.61%）</li>
+                                                    <li>🔧 <strong>改善方向：</strong>
+                                                        <br>&nbsp;&nbsp;• 重新設計或改善製程
+                                                        <br>&nbsp;&nbsp;• 進行根因分析找出失效原因
+                                                        <br>&nbsp;&nbsp;• 縮短保固期或調整任務時間目標
+                                                        <br>&nbsp;&nbsp;• 實施 Burn-in 篩選早期失效品
+                                                    </li>
+                                                </ul>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>

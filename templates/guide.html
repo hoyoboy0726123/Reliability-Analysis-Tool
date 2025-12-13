@@ -1738,6 +1738,16 @@
                                 在高應力條件下測試產品，以在短時間內獲得長期壽命預測
                             </div>
 
+                            <div class="alert alert-info mb-3">
+                                <strong>✅ 本應用採用：</strong><br>
+                                • 溫度：<strong>Arrhenius 模型</strong><br>
+                                • 濕度：<strong>Peck's 模型</strong><br>
+                                • 電壓：<strong>Inverse Power Law (IPL)</strong><br>
+                                • 熱循環：<strong>Coffin-Manson 模型</strong><br>
+                                • 振動：<strong>IPL 模型</strong><br>
+                                • 進階：<strong>Eyring 模型</strong>（可選，考慮應力交互作用）
+                            </div>
+
                             <div class="accordion accordion-flush" id="altAccordion">
                                 <div class="accordion-item bg-transparent">
                                     <h2 class="accordion-header">
@@ -1757,14 +1767,43 @@
                                                 <li class="mb-2"><strong>經濟效益：</strong>在產品設計階段即可識別弱點並改進</li>
                                             </ul>
 
-                                            <h6 class="text-warning mt-3">主要應力類型</h6>
+                                            <h6 class="text-warning mt-3">主要應力類型（本應用採用的模型）</h6>
                                             <ul class="small">
-                                                <li>🌡️ <strong>溫度：</strong>最常用，基於 Arrhenius 模型</li>
-                                                <li>💧 <strong>濕度：</strong>結合溫度使用 (THB, HAST)</li>
-                                                <li>⚡ <strong>電壓：</strong>電介質崩潰、電遷移</li>
-                                                <li>🔄 <strong>熱循環：</strong>焊點疲勞、封裝應力</li>
-                                                <li>📳 <strong>振動：</strong>機械結構可靠度</li>
+                                                <li class="mb-2">🌡️ <strong>溫度 - Arrhenius 模型：</strong><br>
+                                                AF<sub>T</sub> = exp[(E<sub>a</sub>/k) × (1/T<sub>use</sub> - 1/T<sub>alt</sub>)]
+                                                </li>
+                                                <li class="mb-2">💧 <strong>濕度 - Peck's 模型：</strong><br>
+                                                AF<sub>RH</sub> = (RH<sub>alt</sub> / RH<sub>use</sub>)<sup>n</sup><br>
+                                                結合溫度使用 (THB, HAST)
+                                                </li>
+                                                <li class="mb-2">⚡ <strong>電壓 - Inverse Power Law (IPL)：</strong><br>
+                                                AF<sub>V</sub> = (V<sub>alt</sub> / V<sub>use</sub>)<sup>β</sup><br>
+                                                適用：電介質崩潰、電遷移
+                                                </li>
+                                                <li class="mb-2">🔄 <strong>熱循環 - Coffin-Manson：</strong><br>
+                                                AF<sub>TC</sub> = (ΔT<sub>alt</sub>/ΔT<sub>use</sub>)<sup>β</sup> × (f<sub>alt</sub>/f<sub>use</sub>)<sup>α</sup><br>
+                                                適用：焊點疲勞、封裝應力
+                                                </li>
+                                                <li class="mb-2">📳 <strong>振動 - IPL 模型：</strong><br>
+                                                AF<sub>VIB</sub> = (G<sub>alt</sub> / G<sub>use</sub>)<sup>n</sup><br>
+                                                適用：機械結構可靠度
+                                                </li>
+                                                <li class="mb-2">☀️ <strong>UV - 實驗比對：</strong><br>
+                                                AF<sub>UV</sub> = t<sub>field</sub> / t<sub>accel</sub>
+                                                </li>
+                                                <li class="mb-2">🧪 <strong>化學 - IPL 模型：</strong><br>
+                                                AF<sub>Chem</sub> = (C<sub>alt</sub> / C<sub>use</sub>)<sup>n</sup>
+                                                </li>
+                                                <li class="mb-2">☢️ <strong>輻射 - TID 模型：</strong><br>
+                                                AF<sub>Rad</sub> = (D<sub>alt</sub> / D<sub>use</sub>)<sup>n</sup>
+                                                </li>
                                             </ul>
+
+                                            <div class="formula-box mt-3">
+                                                <strong>總加速因子：</strong><br>
+                                                AF<sub>Total</sub> = AF<sub>T</sub> × AF<sub>RH</sub> × AF<sub>V</sub> × AF<sub>TC</sub> × AF<sub>VIB</sub> × ...<br>
+                                                <span class="small">（假設應力獨立；若考慮交互作用，使用 Eyring 模型）</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -1895,6 +1934,15 @@
                             <div class="formula-box mb-3">
                                 <strong>CDF 公式：</strong><br>
                                 F(t) = 1 - exp[-(t/η)<sup>β</sup>]
+                            </div>
+
+                            <div class="alert alert-success mb-3">
+                                <strong>✅ 本應用採用：</strong><br>
+                                • 參數估計方法：<strong>線性回歸 (Linear Regression / Rank Regression on X and Y)</strong><br>
+                                • 中位秩計算：<strong>Benard's Approximation</strong><br>
+                                &nbsp;&nbsp;F = (i - 0.3) / (N + 0.4)<br>
+                                • 擬合工具：scipy.stats.linregress<br>
+                                • 適用：小到中等數據集（n < 15 較佳）
                             </div>
 
                             <div class="accordion accordion-flush" id="weibullAccordion">
@@ -2079,6 +2127,15 @@
                             <div class="alert alert-warning mb-3">
                                 <strong>🔍 特殊情境：</strong><br>
                                 當測試未觀察到失效 (r=0) 時的可靠度評估方法
+                            </div>
+
+                            <div class="alert alert-warning text-dark mb-3">
+                                <strong>✅ 本應用採用：</strong><br>
+                                • 統計方法：<strong>Chi-Squared 分佈</strong><br>
+                                • 公式：MTBF<sub>lower</sub> = 2T / χ²(CL, df=2)<br>
+                                • 預設信心水準：<strong>60%</strong>（可調整至 90%/95%）<br>
+                                • 計算工具：scipy.stats.chi2.ppf<br>
+                                • 任務可靠度：R(t) = exp(-λt)（指數分佈假設）
                             </div>
 
                             <div class="accordion accordion-flush" id="zfAccordion">

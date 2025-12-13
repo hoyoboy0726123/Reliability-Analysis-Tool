@@ -99,7 +99,7 @@
         <div class="guide-hero">
             <div class="container">
                 <div class="text-center text-white">
-                    <h1 class="display-4 fw-bold mb-3">📚 加速因子參數設定指南</h1>
+                    <h1 class="display-4 fw-bold mb-3">📚 參數設定指南</h1>
                     <p class="lead mb-4">完整的參數說明、典型值與參考文獻</p>
                     <a href="/" class="btn btn-light btn-lg">
                         ← 返回主頁面
@@ -119,6 +119,9 @@
             <div class="d-flex flex-wrap gap-2 justify-content-center mb-5">
                 <span class="badge filter-chip active bg-secondary" data-filter="all">
                     全部
+                </span>
+                <span class="badge filter-chip bg-secondary" data-filter="activation-energy">
+                    🔥 活化能
                 </span>
                 <span class="badge filter-chip bg-secondary" data-filter="temperature">
                     🌡️ 溫度
@@ -148,6 +151,258 @@
 
             <!-- Parameter Cards -->
             <div class="row g-4" id="paramCardsContainer">
+                <!-- Activation Energy Card -->
+                <div class="col-md-6 col-lg-4 param-card-wrapper" data-category="activation-energy" data-keywords="活化能 activation energy ea arrhenius 半導體 ic 封裝 電阻 電容 焊點">
+                    <div class="card param-card glass-panel h-100 border border-danger">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <h5 class="card-title text-white">🔥 活化能 (Ea)</h5>
+                                <span class="param-badge bg-danger">核心參數</span>
+                            </div>
+
+                            <div class="formula-box mb-3">
+                                <strong>定義：</strong><br>
+                                失效機制啟動所需的最小能量障礙 (eV)
+                            </div>
+
+                            <div class="alert alert-danger mb-3">
+                                <strong>⚠️ 重要性：</strong><br>
+                                Ea 是 Arrhenius 模型的核心，決定溫度加速效應的強度
+                            </div>
+
+                            <div class="accordion accordion-flush" id="eaAccordion">
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#eaValues">
+                                            💡 元件類型與 Ea 範圍
+                                        </button>
+                                    </h2>
+                                    <div id="eaValues" class="accordion-collapse collapse" data-bs-parent="#eaAccordion">
+                                        <div class="accordion-body">
+                                            <table class="table table-sm table-dark typical-value-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>元件/失效機制</th>
+                                                        <th>Ea (eV)</th>
+                                                        <th>說明</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr class="table-info">
+                                                        <td colspan="3"><strong>🔴 高溫極度敏感 (Ea ≥ 1.0)</strong></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>IC 金-鋁鍵合線</td>
+                                                        <td>1.0-1.26</td>
+                                                        <td>金屬間化合物生長</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>塑膠材料老化</td>
+                                                        <td>0.8-1.2</td>
+                                                        <td>化學降解</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>金屬膜電阻</td>
+                                                        <td>0.8-1.0</td>
+                                                        <td>薄膜氧化漂移</td>
+                                                    </tr>
+                                                    <tr class="table-warning">
+                                                        <td colspan="3"><strong>🟡 半導體 IC 元件 (Ea = 0.6-1.0)</strong></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>CPU/GPU 銅互連</td>
+                                                        <td>~0.9</td>
+                                                        <td>電遷移 (EM)</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>MOS 氧化層 (TDDB)</td>
+                                                        <td>0.6-0.9</td>
+                                                        <td>內因性崩潰</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>鋁互連</td>
+                                                        <td>0.55-0.6</td>
+                                                        <td>舊技術 EM</td>
+                                                    </tr>
+                                                    <tr class="table-success">
+                                                        <td colspan="3"><strong>🟢 業界默認值 (Ea = 0.7)</strong></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>通用默認</td>
+                                                        <td>0.7</td>
+                                                        <td>JEDEC 標準，未知機制</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>碳成分電阻</td>
+                                                        <td>0.7-0.9</td>
+                                                        <td>阻值漂移</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>電容器 (AEC/TEC)</td>
+                                                        <td>0.6-0.9</td>
+                                                        <td>電解液蒸發</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>分立半導體</td>
+                                                        <td>0.6-0.7</td>
+                                                        <td>結點退化</td>
+                                                    </tr>
+                                                    <tr class="table-primary">
+                                                        <td colspan="3"><strong>🔵 機械/焊點 (Ea = 0.5-0.7)</strong></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>焊點熱疲勞</td>
+                                                        <td>0.5-0.7</td>
+                                                        <td>溫度敏感度較低</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>焊點電遷移</td>
+                                                        <td>0.6-0.8</td>
+                                                        <td>高電流密度</td>
+                                                    </tr>
+                                                    <tr class="table-secondary">
+                                                        <td colspan="3"><strong>⚫ 特殊機制</strong></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>氧化層缺陷 (TDDB)</td>
+                                                        <td>0.3</td>
+                                                        <td>外因性，早期失效</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>熱載子注入 (HCI)</td>
+                                                        <td>-0.1 ~ -0.2</td>
+                                                        <td><strong>負Ea！低溫加速</strong></td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#eaPhysics">
+                                            🎓 物理意義
+                                        </button>
+                                    </h2>
+                                    <div id="eaPhysics" class="accordion-collapse collapse" data-bs-parent="#eaAccordion">
+                                        <div class="accordion-body">
+                                            <h6 class="text-warning">Ea 代表什麼？</h6>
+                                            <p class="small">活化能是原子或分子系統從基態躍遷到能啟動特定失效過程所需的最小能量障礙。Ea 越高，該失效機制對溫度越敏感。</p>
+
+                                            <h6 class="text-warning mt-3">為什麼 Ea 如此重要？</h6>
+                                            <ul class="small">
+                                                <li class="mb-2"><strong>決定加速強度：</strong>Ea = 0.9 eV vs. 0.7 eV，溫度每升高 10°C，加速因子差異可達 30%</li>
+                                                <li class="mb-2"><strong>不同機制有不同 Ea：</strong>一個元件可能有多個潛在失效模式，必須識別主導機制</li>
+                                                <li class="mb-2"><strong>負 Ea 的挑戰：</strong>HCI 具負 Ea，低溫反而加速失效，顛覆常規認知</li>
+                                            </ul>
+
+                                            <h6 class="text-warning mt-3">業界默認 0.7 eV 的局限性：</h6>
+                                            <p class="small">0.7 eV 是統計平均值，非物理精確值。對現代高性能 IC (CPU/GPU)，錯用 0.7 eV 會嚴重低估溫度影響。</p>
+
+                                            <div class="warning-box mt-3">
+                                                <strong>⚠️ 關鍵原則：</strong>
+                                                <p class="mb-0 small">
+                                                準確的可靠度評估必須基於<strong>特定失效機制</strong>的 Ea，而非通用默認值。當無實驗數據時，參考同類元件文獻或材料供應商數據。
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#eaMethod">
+                                            🔧 如何確定 Ea
+                                        </button>
+                                    </h2>
+                                    <div id="eaMethod" class="accordion-collapse collapse" data-bs-parent="#eaAccordion">
+                                        <div class="accordion-body">
+                                            <div class="method-step">
+                                                <strong>方法 1：Arrhenius 繪圖 (實驗法)</strong>
+                                                <p class="mb-0 mt-2 small">
+                                                1. 選擇至少 3 個溫度 (如 85°C, 100°C, 125°C)<br>
+                                                2. 每個溫度測試 20-30 樣品，記錄失效時間<br>
+                                                3. 繪製 ln(MTTF) vs. 1/T (Kelvin)<br>
+                                                4. 直線斜率 = -Ea/k，求出 Ea
+                                                </p>
+                                            </div>
+
+                                            <div class="method-step">
+                                                <strong>方法 2：查詢文獻與標準</strong>
+                                                <p class="mb-0 mt-2 small">
+                                                • JEDEC Publication 122C：提供多種失效機制 Ea 範圍<br>
+                                                • 材料供應商數據表<br>
+                                                • 同類產品可靠度報告<br>
+                                                • 學術論文 (IEEE, IEDM)
+                                                </p>
+                                            </div>
+
+                                            <div class="method-step">
+                                                <strong>方法 3：失效物理分析 (PoF)</strong>
+                                                <p class="mb-0 mt-2 small">
+                                                通過失效分析 (FA) 確定主導失效機制：<br>
+                                                • SEM/TEM：觀察微觀結構<br>
+                                                • 電性分析：確定失效模式<br>
+                                                • 匹配已知機制的 Ea
+                                                </p>
+                                            </div>
+
+                                            <div class="warning-box">
+                                                <strong>⚠️ 注意：</strong>
+                                                <p class="mb-0 small">
+                                                • <strong>零失效測試：</strong>JEDEC 建議使用 Ea = 1.0 eV (保守)<br>
+                                                • <strong>多重機制：</strong>總失效率是所有模式之和<br>
+                                                • <strong>溫度範圍：</strong>Ea 在不同溫度範圍可能變化
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#eaRef">
+                                            📚 參考文獻
+                                        </button>
+                                    </h2>
+                                    <div id="eaRef" class="accordion-collapse collapse" data-bs-parent="#eaAccordion">
+                                        <div class="accordion-body">
+                                            <ul class="list-unstyled mb-0">
+                                                <li class="mb-2">
+                                                    <a href="https://home.jeita.or.jp/tsc/std-pdf/EDR-4704A.pdf" target="_blank" class="reference-link">
+                                                        → JEITA EDR-4704A (半導體失效機制 Ea 數據)
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://www.jedec.org/standards-documents" target="_blank" class="reference-link">
+                                                        → JEDEC JEP122C (活化能標準)
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://www.relec.co.uk/the-relationship-between-temperature-reliability/" target="_blank" class="reference-link">
+                                                        → Relec: Temperature & Reliability
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://nomtbf.com/2012/08/where-does-0-7ev-come-from/" target="_blank" class="reference-link">
+                                                        → No MTBF: 0.7 eV 的由來
+                                                    </a>
+                                                </li>
+                                                <li class="mb-2">
+                                                    <a href="https://www.electronics-cooling.com/2017/08/10c-increase-temperature-really-reduce-life-electronics-half/" target="_blank" class="reference-link">
+                                                        → 10°C 法則的真相
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Temperature Card -->
                 <div class="col-md-6 col-lg-4 param-card-wrapper" data-category="temperature" data-keywords="溫度 temperature arrhenius 活化能 ea">
                     <div class="card param-card glass-panel h-100">

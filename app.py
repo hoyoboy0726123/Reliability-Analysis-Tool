@@ -202,77 +202,106 @@ def calculate_af(params):
     except Exception as e:
         return {"error": str(e)}
 
-def calculate_weibull(failures, suspensions):
+def calculate_weibull(failures, suspensions, options=None):
     """
-    Weibull 分析 (Rank Regression on X and Y)
-    使用 Benard's Approximation 處理秩
+    Weibull 分析 - 支持多種中位秩方法和回歸方法
+
+    Args:
+        failures: 失效時間列表
+        suspensions: 截尾數據（保留兼容性）
+        options: 選項字典 {
+            'median_rank_method': 'benard' | 'exact' | 'mean',
+            'regression_method': 'rry' | 'rrx' | 'mle'
+        }
     """
     try:
+        # 設定預設選項
+        if options is None:
+            options = {}
+        median_rank_method = options.get('median_rank_method', 'benard')
+        regression_method = options.get('regression_method', 'rry')
+
         # 數據預處理
         failures = sorted([float(x) for x in failures])
         n_failures = len(failures)
-        n_total = 64 # 預設總數，或由前端傳入 (failures + suspensions)
-        
-        # 如果前端傳來的是具體的截尾時間列表，則計算數量；
-        # 這裡簡化假設使用者輸入的是「失效時間列表」和「總樣品數N」
-        # 實際上，Rank計算需要知道總樣本數 N
-        
-        # 為了符合 Rank Regression 的標準做法：
-        # 1. 將所有數據排序 (失效 + 截尾)
-        # 2. 計算 Order Number (i)
-        # 3. 計算 Median Rank (F)
-        # 4. 僅對「失效數據」進行線性迴歸
-        
-        # 這裡簡化實作：假設截尾數據都大於失效數據 (Type I/II Censoring)
-        # 這是最常見的情境 (測試到某個時間點停止，存活的都算截尾)
-        # 在這種情況下，失效數據的 Rank 就是它們在排序後的自然順序 1, 2, ..., r
-        
+        n_total = max(n_failures, 64) # 預設總數
+
         if n_failures < 2:
             return {"error": "失效數據不足，無法進行 Weibull 擬合 (至少需要 2 點)"}
 
-        # 準備迴歸數據
-        x_vals = [] # ln(t)
-        y_vals = [] # ln(-ln(1-F))
+        # 計算中位秩
         ranks = []
-        
         for i in range(1, n_failures + 1):
-            # Benard's Approximation
-            # F = (i - 0.3) / (N + 0.4)
-            # 注意：這裡的 N 應該是總樣本數 (失效 + 存活)
-            # 我們需要從前端獲取 N，這裡暫時假設 N = 64 (根據題目)
-            # 為了通用性，我們應該讓 N = max(64, n_failures + suspensions)
-            # 這裡我們先用傳入的參數
-            
-            n_total_calc = max(n_failures, 64) # 預設 64，若失效更多則取失效數
-            
-            f = (i - 0.3) / (n_total_calc + 0.4)
-            ranks.append(f)
-            
-            t = failures[i-1]
-            if t <= 0: continue # 忽略非正時間
-            
-            x = np.log(t)
-            y = np.log(-np.log(1 - f))
-            
-            x_vals.append(x)
-            y_vals.append(y)
+            if median_rank_method == 'benard':
+                # Benard's Approximation (最常用)
+                f = (i - 0.3) / (n_total + 0.4)
+            elif median_rank_method == 'exact':
+                # 精確中位秩 (使用 Beta 分佈的中位數)
+                # F = Beta_inv(0.5, i, n-i+1)
+                f = stats.beta.ppf(0.5, i, n_total - i + 1)
+            elif median_rank_method == 'mean':
+                # 平均秩 (Mean Rank)
+                f = i / (n_total + 1)
+            else:
+                # 預設使用 Benard's
+                f = (i - 0.3) / (n_total + 0.4)
 
-        # 線性迴歸
-        slope, intercept, r_value, p_value, std_err = stats.linregress(x_vals, y_vals)
-        
-        beta = slope
-        # intercept = -beta * ln(eta)  =>  ln(eta) = -intercept / beta  => eta = exp(...)
-        eta_alt = np.exp(-intercept / beta)
-        
+            ranks.append(f)
+
+        # 準備回歸數據
+        t_vals = []
+        f_vals = []
+        for i, (t, f) in enumerate(zip(failures, ranks)):
+            if t <= 0 or f >= 1 or f <= 0:
+                continue
+            t_vals.append(t)
+            f_vals.append(f)
+
+        # 根據回歸方法選擇
+        if regression_method == 'mle':
+            # 最大似然估計 (MLE)
+            # 使用 scipy.stats.weibull_min.fit
+            shape, loc, scale = stats.weibull_min.fit(failures, floc=0)
+            beta = shape
+            eta_alt = scale
+            r_squared = 0.999  # MLE 不提供 R²，給一個高值表示最優擬合
+
+        else:
+            # Rank Regression (RRX 或 RRY)
+            # 轉換為線性關係: ln(-ln(1-F)) = beta * ln(t) - beta * ln(eta)
+            x_vals = []  # ln(t)
+            y_vals = []  # ln(-ln(1-F))
+
+            for t, f in zip(t_vals, f_vals):
+                x = np.log(t)
+                y = np.log(-np.log(1 - f))
+                x_vals.append(x)
+                y_vals.append(y)
+
+            if regression_method == 'rrx':
+                # Rank Regression on X (minimize x residuals)
+                # 相當於 y = f(x) 的反函數，交換 x 和 y
+                slope, intercept, r_value, _, _ = stats.linregress(y_vals, x_vals)
+                beta = 1 / slope
+                eta_alt = np.exp(intercept / slope)
+                r_squared = r_value ** 2
+            else:
+                # Rank Regression on Y (預設，minimize y residuals)
+                slope, intercept, r_value, _, _ = stats.linregress(x_vals, y_vals)
+                beta = slope
+                eta_alt = np.exp(-intercept / beta)
+                r_squared = r_value ** 2
+
         return {
             "beta": round(beta, 4),
             "eta_alt": round(eta_alt, 4),
-            "r_squared": round(r_value**2, 4),
+            "r_squared": round(r_squared, 4),
+            "method": f"{median_rank_method.upper()} + {regression_method.upper()}",
             "plot_data": {
-                "x": x_vals, # ln(t) for plotting line
-                "y": y_vals, # Transformed probability
-                "t": failures, # Original time for scatter
-                "f": ranks     # Probability for scatter
+                "x": [np.log(t) for t in t_vals],  # ln(t) for plotting line
+                "y": [np.log(-np.log(1 - f)) for f in f_vals],  # Transformed probability
+                "t": t_vals,  # Original time for scatter
+                "f": f_vals   # Probability for scatter
             }
         }
     except Exception as e:
@@ -384,9 +413,11 @@ def calculate():
     
     # 2. Weibull 分析 (如果有的話)
     weibull_result = {}
-    failures = data.get('weibull_data', {}).get('failures', [])
+    weibull_data = data.get('weibull_data', {})
+    failures = weibull_data.get('failures', [])
+    weibull_options = weibull_data.get('options', {})
     if failures and len(failures) > 0:
-        weibull_result = calculate_weibull(failures, 0) # 暫時忽略 suspensions 參數，假設 N=64 固定或由前端處理
+        weibull_result = calculate_weibull(failures, 0, weibull_options)
     
     # 3. 零失效分析參數
     zero_fail_params = data.get('zero_fail_params', {})

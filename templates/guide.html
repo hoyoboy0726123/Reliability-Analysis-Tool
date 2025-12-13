@@ -1937,12 +1937,24 @@
                             </div>
 
                             <div class="alert alert-success mb-3">
-                                <strong>✅ 本應用採用：</strong><br>
-                                • 參數估計方法：<strong>線性回歸 (Linear Regression / Rank Regression on X and Y)</strong><br>
-                                • 中位秩計算：<strong>Benard's Approximation</strong><br>
-                                &nbsp;&nbsp;F = (i - 0.3) / (N + 0.4)<br>
-                                • 擬合工具：scipy.stats.linregress<br>
-                                • 適用：小到中等數據集（n < 15 較佳）
+                                <strong>✅ 本應用支持多種方法（可選）：</strong><br>
+
+                                <strong>中位秩方法：</strong><br>
+                                • <strong>Benard's Approximation（預設推薦）</strong><br>
+                                &nbsp;&nbsp;F = (i - 0.3) / (N + 0.4) - 最常用，簡單準確
+
+                                <div class="mt-1"></div>
+                                • <strong>精確中位秩 (Exact Median Rank)</strong><br>
+                                &nbsp;&nbsp;F = Beta<sup>-1</sup>(0.5, i, n-i+1) - 使用 Beta 分佈，理論最準確
+
+                                <div class="mt-1"></div>
+                                • <strong>平均秩 (Mean Rank)</strong><br>
+                                &nbsp;&nbsp;F = i / (N + 1) - 最簡單，但偏差較大
+
+                                <strong class="mt-2 d-block">回歸方法：</strong><br>
+                                • <strong>RRY（預設推薦）</strong> - 最小化 y 方向殘差，n<15 適用<br>
+                                • <strong>RRX</strong> - 最小化 x 方向殘差<br>
+                                • <strong>MLE（最優）</strong> - 統計最優，n≥15 推薦
                             </div>
 
                             <div class="accordion accordion-flush" id="weibullAccordion">

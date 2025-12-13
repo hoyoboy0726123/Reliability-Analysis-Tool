@@ -415,6 +415,27 @@
                             <textarea class="form-control font-monospace mb-3" id="failures_input" rows="5"
                                 placeholder="例如: 100, 150, 200, 250, 300 (至少 2 個)"></textarea>
 
+                            <div class="row g-2 mb-3">
+                                <div class="col-6">
+                                    <label class="form-label text-white small">中位秩方法</label>
+                                    <select class="form-select form-select-sm" id="median_rank_method">
+                                        <option value="benard" selected>Benard's (推薦)</option>
+                                        <option value="exact">精確中位秩</option>
+                                        <option value="mean">平均秩</option>
+                                    </select>
+                                    <div class="form-text text-warning small">Benard's 最常用</div>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label text-white small">回歸方法</label>
+                                    <select class="form-select form-select-sm" id="regression_method">
+                                        <option value="rry" selected>RRY (推薦)</option>
+                                        <option value="rrx">RRX</option>
+                                        <option value="mle">MLE (最優)</option>
+                                    </select>
+                                    <div class="form-text text-warning small">n<15 用 RRY，n≥15 用 MLE</div>
+                                </div>
+                            </div>
+
                             <hr class="border-secondary">
 
                             <h6 class="text-uppercase text-white mb-2">情境 B: 零失效 (ZERO-FAILURE)</h6>

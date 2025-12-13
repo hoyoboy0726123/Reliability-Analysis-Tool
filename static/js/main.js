@@ -147,6 +147,12 @@ function calculate() {
         failures = failuresInput.split(/[,;\s]+/).map(Number).filter(n => !isNaN(n) && n > 0);
     }
 
+    // 2.1 收集 Weibull 分析方法選項
+    const weibullOptions = {
+        median_rank_method: document.getElementById('median_rank_method').value,
+        regression_method: document.getElementById('regression_method').value
+    };
+
     // 3. 收集零失效參數
     const zeroFailParams = {
         n: document.getElementById('n_samples').value,
@@ -165,7 +171,10 @@ function calculate() {
         },
         body: JSON.stringify({
             af_params: afParams,
-            weibull_data: { failures: failures },
+            weibull_data: {
+                failures: failures,
+                options: weibullOptions
+            },
             zero_fail_params: zeroFailParams,
             mission_years: missionYears
         })

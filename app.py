@@ -307,37 +307,39 @@ def calculate_weibull(failures, suspensions, options=None):
     except Exception as e:
         return {"error": str(e)}
 
-def calculate_reliability_results(af_total, weibull_params, zero_fail_params, t_mission=17520):
+def calculate_reliability_results(af_total, weibull_params, zero_fail_params, t_mission=17520, bx_percent=1):
     """
     整合計算：可靠度推算 (包含 Weibull 模式與零失效模式)
     t_mission: 任務時間（小時），預設 17520 小時 (2 年)
+    bx_percent: Bx% 壽命的百分比 (1, 10, 50 等)，預設 1
     """
     results = {}
-    
+
     # --- 模式 1: Weibull 分析 (r > 0) ---
     if weibull_params and "beta" in weibull_params:
         beta = weibull_params["beta"]
         eta_alt = weibull_params["eta_alt"]
-        
+
         # 現場特性壽命
         eta_use = eta_alt * af_total
-        
+
         # MTTF (Weibull Mean) = eta * Gamma(1 + 1/beta)
         mttf_use = eta_use * special.gamma(1 + 1/beta)
-        
+
         # 任務可靠度 R(t)
         # t_mission 由參數傳入
         r_mission = np.exp(-((t_mission / eta_use) ** beta))
-        
-        # B1% Life
-        # t = eta * (-ln(1-0.01))^(1/beta)
-        b1_life = eta_use * ((-np.log(1 - 0.01)) ** (1/beta))
-        
+
+        # Bx% Life (動態計算)
+        # t = eta * (-ln(1-x/100))^(1/beta)
+        bx_life = eta_use * ((-np.log(1 - bx_percent / 100)) ** (1/beta))
+
         results["weibull"] = {
             "eta_use": round(eta_use, 2),
             "mttf_use": round(mttf_use, 2),
             "r_mission": round(r_mission, 6),
-            "b1_life": round(b1_life, 2)
+            "bx_life": round(bx_life, 2),
+            "bx_percent": bx_percent  # 記錄使用的百分比
         }
 
     # --- 模式 2: 零失效分析 (r = 0) ---
@@ -418,10 +420,10 @@ def calculate():
     weibull_options = weibull_data.get('options', {})
     if failures and len(failures) > 0:
         weibull_result = calculate_weibull(failures, 0, weibull_options)
-    
+
     # 3. 零失效分析參數
     zero_fail_params = data.get('zero_fail_params', {})
-    
+
     # 4. Mission Time (Mission Time)
     try:
         mission_years = float(data.get('mission_years', 2))
@@ -432,8 +434,11 @@ def calculate():
 
     t_mission = mission_years * 8760 # Convert to hours
 
-    # 5. 綜合結果
-    final_results = calculate_reliability_results(af_total, weibull_result, zero_fail_params, t_mission)
+    # 5. 提取 Bx% 選項
+    bx_percent = weibull_options.get('bx_life_percent', 1)  # 預設 B1%
+
+    # 6. 綜合結果
+    final_results = calculate_reliability_results(af_total, weibull_result, zero_fail_params, t_mission, bx_percent)
     
     return jsonify({
         "af_result": af_result,

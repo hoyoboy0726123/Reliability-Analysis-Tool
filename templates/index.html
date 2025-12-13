@@ -416,7 +416,7 @@
                                 placeholder="例如: 100, 150, 200, 250, 300 (至少 2 個)"></textarea>
 
                             <div class="row g-2 mb-3">
-                                <div class="col-6">
+                                <div class="col-4">
                                     <label class="form-label text-white small">中位秩方法</label>
                                     <select class="form-select form-select-sm" id="median_rank_method">
                                         <option value="benard" selected>Benard's (推薦)</option>
@@ -425,7 +425,7 @@
                                     </select>
                                     <div class="form-text text-warning small">Benard's 最常用</div>
                                 </div>
-                                <div class="col-6">
+                                <div class="col-4">
                                     <label class="form-label text-white small">回歸方法</label>
                                     <select class="form-select form-select-sm" id="regression_method">
                                         <option value="rry" selected>RRY (推薦)</option>
@@ -433,6 +433,15 @@
                                         <option value="mle">MLE (最優)</option>
                                     </select>
                                     <div class="form-text text-warning small">n<15 用 RRY，n≥15 用 MLE</div>
+                                </div>
+                                <div class="col-4">
+                                    <label class="form-label text-white small">Bx% 壽命計算</label>
+                                    <select class="form-select form-select-sm" id="bx_life_percent">
+                                        <option value="1" selected>B1% (早期失效)</option>
+                                        <option value="10">B10% (機械工程)</option>
+                                        <option value="50">B50% (中位壽命)</option>
+                                    </select>
+                                    <div class="form-text text-warning small">B1% 為預設</div>
                                 </div>
                             </div>
 
@@ -545,7 +554,7 @@
                                                         <div class="h5 text-info" id="wb_mttf">-</div>
                                                     </div>
                                                     <div class="mb-3">
-                                                        <label class="small text-muted">B1% Life</label>
+                                                        <label class="small text-muted" id="wb_bx_label">B1% Life</label>
                                                         <div class="h5 text-warning" id="wb_b1">-</div>
                                                     </div>
                                                     <div class="mb-3">

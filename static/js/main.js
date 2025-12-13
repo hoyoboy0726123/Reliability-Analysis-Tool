@@ -150,7 +150,8 @@ function calculate() {
     // 2.1 收集 Weibull 分析方法選項
     const weibullOptions = {
         median_rank_method: document.getElementById('median_rank_method').value,
-        regression_method: document.getElementById('regression_method').value
+        regression_method: document.getElementById('regression_method').value,
+        bx_life_percent: parseFloat(document.getElementById('bx_life_percent').value)
     };
 
     // 3. 收集零失效參數
@@ -251,7 +252,12 @@ function updateUI(data, hasFailures) {
 
         const res = data.reliability_result.weibull;
         document.getElementById('wb_mttf').innerText = res.mttf_use.toLocaleString() + " hrs";
-        document.getElementById('wb_b1').innerText = res.b1_life.toLocaleString() + " hrs";
+
+        // 動態顯示 Bx% Life
+        const bxPercent = res.bx_percent || 1;
+        document.getElementById('wb_bx_label').innerText = `B${bxPercent}% Life`;
+        document.getElementById('wb_b1').innerText = res.bx_life.toLocaleString() + " hrs";
+
         document.getElementById('wb_rel').innerText = (res.r_mission * 100).toFixed(4) + "%";
         document.getElementById('wb_rel_label').innerText = `Reliability (${missionYears} Years)`;
 
@@ -320,26 +326,39 @@ function generateConclusion(data, hasFailures) {
         const res = data.reliability_result.weibull;
         const failuresInput = document.getElementById('failures_input').value;
         const n_failures = failuresInput.split(/[,;\s]+/).filter(n => n.trim() !== "").length;
-        const b1_years = (res.b1_life / 8760).toFixed(2);
+        const bx_years = (res.bx_life / 8760).toFixed(2);
         const reliability_pct = (res.r_mission * 100).toFixed(2);
+        const bx_percent = res.bx_percent || 1;
 
-        // 判斷 B1% 壽命是否超過任務時間
-        if (parseFloat(b1_years) >= mission_years) {
-            // 正面結論：B1% 壽命 ≥ 任務時間
+        // 根據 Bx% 選擇描述文字
+        let bx_description = "";
+        if (bx_percent === 1) {
+            bx_description = "即預計只有 1% 的產品會失效的時間";
+        } else if (bx_percent === 10) {
+            bx_description = "即預計有 10% 的產品會失效的時間";
+        } else if (bx_percent === 50) {
+            bx_description = "即中位壽命，50% 產品會失效的時間";
+        } else {
+            bx_description = `即預計有 ${bx_percent}% 的產品會失效的時間`;
+        }
+
+        // 判斷 Bx% 壽命是否超過任務時間
+        if (parseFloat(bx_years) >= mission_years) {
+            // 正面結論：Bx% 壽命 ≥ 任務時間
             conclusionHTML = `
-                我們的測試模擬了現場使用壽命。計算結果顯示，這批樣品的 <strong>B1% 壽命</strong>（即預計只有 1% 的產品會失效的時間）為 <strong>${b1_years} 年</strong> (${Math.round(res.b1_life).toLocaleString()} 小時)。
+                我們的測試模擬了現場使用壽命。計算結果顯示，這批樣品的 <strong>B${bx_percent}% 壽命</strong>（${bx_description}）為 <strong>${bx_years} 年</strong> (${Math.round(res.bx_life).toLocaleString()} 小時)。
                 <br><br>
                 在 <strong>${mission_years} 年</strong>的任務期間內，預期可靠度為 <strong>${reliability_pct}%</strong>。
                 這個數值證明了即使有 <strong>${n_failures}</strong> 個樣品失效，產品的整體可靠性邊際仍然充足。
                 不過，我們必須對這 ${n_failures} 個失效進行追蹤，以確認是否屬於可預防的早期製造缺陷。
             `;
         } else {
-            // 否定結論：B1% 壽命 < 任務時間
+            // 否定結論：Bx% 壽命 < 任務時間
             const failure_risk_pct = (100 - res.r_mission * 100).toFixed(2);
             conclusionHTML = `
                 <strong class="text-warning">⚠️ 警告：可靠性不足</strong>
                 <br><br>
-                我們的測試模擬了現場使用壽命。計算結果顯示，這批樣品的 <strong>B1% 壽命</strong>僅為 <strong>${b1_years} 年</strong> (${Math.round(res.b1_life).toLocaleString()} 小時)，
+                我們的測試模擬了現場使用壽命。計算結果顯示，這批樣品的 <strong>B${bx_percent}% 壽命</strong>僅為 <strong>${bx_years} 年</strong> (${Math.round(res.bx_life).toLocaleString()} 小時)，
                 <strong class="text-danger">未達到 ${mission_years} 年的任務時間要求</strong>。
                 <br><br>
                 在 ${mission_years} 年任務期間內，預期可靠度僅為 <strong>${reliability_pct}%</strong>，失效風險高達 <strong class="text-danger">${failure_risk_pct}%</strong>。

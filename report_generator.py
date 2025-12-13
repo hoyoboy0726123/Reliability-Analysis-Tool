@@ -345,10 +345,14 @@ def generate_reliability_report(data, output_file):
         wb_result = reliability_result['weibull']
         wb_data = results.get('weibull_result', {})
 
+        # 動態 Bx% 標籤
+        bx_percent = wb_result.get('bx_percent', 1)
+        bx_label = f"B{bx_percent}% Life / B{bx_percent}壽命"
+
         reliability_data = [
             ['Metric / 指標', 'Value / 數值'],
             ['MTTF (Mean Life) / 平均壽命', f"{wb_result.get('mttf_use', 0):,.2f} hours"],
-            ['B1% Life / B1壽命', f"{wb_result.get('b1_life', 0):,.2f} hours"],
+            [bx_label, f"{wb_result.get('bx_life', 0):,.2f} hours"],
             [f"Reliability ({test_data.get('mission_years', 2)} Years) / 可靠度", f"{wb_result.get('r_mission', 0) * 100:.4f}%"],
             ['', ''],
             ['Weibull Parameters / Weibull 參數', ''],

@@ -15,6 +15,7 @@ from reportlab.pdfbase.ttfonts import TTFont
 from datetime import datetime
 import base64
 import io
+import re
 from PIL import Image as PILImage
 
 # 導入圖表生成模組
@@ -513,12 +514,72 @@ def generate_reliability_report(data, output_file):
 
     conclusion = data.get('conclusion', 'No conclusion available.')
 
-    # 將結論分段
-    conclusion_paragraphs = conclusion.split('\n')
-    for para in conclusion_paragraphs:
-        if para.strip():
-            story.append(Paragraph(para.strip(), normal_style))
-            story.append(Spacer(1, 8))
+    # 定義結論專用樣式
+    conclusion_normal_style = ParagraphStyle(
+        'ConclusionNormal',
+        parent=styles['Normal'],
+        fontSize=11,
+        leading=16,
+        fontName=CHINESE_FONT if CHINESE_FONT != 'Helvetica' else 'Helvetica',
+        textColor=colors.HexColor('#1f2937')
+    )
+
+    # 處理結論格式（支持 HTML 標籤）
+    # 替換特殊符號避免亂碼
+    conclusion = conclusion.replace('⚠️', '[!]').replace('✓', '[✓]').replace('✗', '[✗]')
+
+    # 轉換 HTML 標籤為 reportlab 格式
+    # 處理 <strong class="text-warning"> -> <font color="orange"><b>
+    conclusion = re.sub(r'<strong class="text-warning">(.*?)</strong>',
+                       r'<font color="#f59e0b"><b>\1</b></font>', conclusion)
+
+    # 處理 <strong class="text-danger"> -> <font color="red"><b>
+    conclusion = re.sub(r'<strong class="text-danger">(.*?)</strong>',
+                       r'<font color="#dc2626"><b>\1</b></font>', conclusion)
+
+    # 處理 <strong class="text-success"> -> <font color="green"><b>
+    conclusion = re.sub(r'<strong class="text-success">(.*?)</strong>',
+                       r'<font color="#10b981"><b>\1</b></font>', conclusion)
+
+    # 處理 <strong> -> <b>
+    conclusion = re.sub(r'<strong>(.*?)</strong>', r'<b>\1</b>', conclusion)
+
+    # 處理 <br><br> 和 <br> -> 分段標記
+    conclusion = conclusion.replace('<br><br>', '|||PARA|||')
+    conclusion = conclusion.replace('<br>', '<br/>')
+
+    # 移除 <ul> 和 </ul> 標籤，保留 <li>
+    conclusion = conclusion.replace('<ul class="mb-0 mt-2">', '')
+    conclusion = conclusion.replace('<ul>', '')
+    conclusion = conclusion.replace('</ul>', '')
+
+    # 處理 <li> -> 項目符號
+    conclusion = re.sub(r'<li>(.*?)</li>', r'• \1<br/>', conclusion)
+
+    # 移除其他 class 屬性
+    conclusion = re.sub(r' class="[^"]*"', '', conclusion)
+
+    # 分段處理
+    paragraphs = conclusion.split('|||PARA|||')
+
+    for para in paragraphs:
+        para = para.strip()
+        if para:
+            # 移除空白的 div 標籤
+            para = re.sub(r'<div[^>]*>\s*</div>', '', para)
+            para = para.replace('<div class="small text-muted mt-2">', '<font size="9" color="#6b7280">')
+            para = para.replace('</div>', '</font>')
+
+            try:
+                story.append(Paragraph(para, conclusion_normal_style))
+                story.append(Spacer(1, 10))
+            except Exception as e:
+                # 如果 Paragraph 失敗，使用純文字版本
+                print(f"Error rendering conclusion paragraph: {e}")
+                # 移除所有 HTML 標籤作為後備
+                plain_text = re.sub(r'<[^>]+>', '', para)
+                story.append(Paragraph(plain_text, conclusion_normal_style))
+                story.append(Spacer(1, 10))
 
     # 9. 頁腳資訊
     story.append(Spacer(1, 30))

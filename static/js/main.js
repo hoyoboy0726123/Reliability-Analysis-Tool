@@ -554,3 +554,143 @@ function renderChart() {
 
     Plotly.newPlot(plotDiv, traces, layout);
 }
+
+// Generate PDF Report
+async function generatePDFReport() {
+    const button = document.getElementById('generate_report_btn');
+    button.disabled = true;
+    button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>生成中...';
+
+    try {
+        // 收集所有參數數據
+        const reportData = {
+            // AF 參數
+            af_params: {
+                t_use: document.getElementById('t_use').value,
+                t_alt: document.getElementById('t_alt').value,
+                rh_use: document.getElementById('rh_use').value,
+                rh_alt: document.getElementById('rh_alt').value,
+                ea: document.getElementById('ea').value,
+                n_hum: document.getElementById('n_hum').value,
+                enable_temp: document.getElementById('enable_temp').checked,
+                enable_hum: document.getElementById('enable_hum').checked,
+                enable_voltage: document.getElementById('enable_voltage').checked,
+                enable_tc: document.getElementById('enable_tc').checked,
+                enable_vib: document.getElementById('enable_vib').checked,
+                enable_uv: document.getElementById('enable_uv').checked,
+                enable_chem: document.getElementById('enable_chem').checked,
+                enable_rad: document.getElementById('enable_rad').checked,
+                enable_eyring: document.getElementById('enable_eyring').checked
+            },
+
+            // 測試數據
+            test_data: {
+                failures: document.getElementById('failures_input').value,
+                n_samples: document.getElementById('n_samples').value,
+                t_test: document.getElementById('t_test').value,
+                cl: document.getElementById('cl').value,
+                mission_years: document.getElementById('mission_years').value
+            },
+
+            // 當前結果數據
+            results: currentData,
+
+            // 分析模式
+            analysis_mode: currentMode,
+
+            // 結論文字
+            conclusion: document.getElementById('conclusion_text').innerText,
+
+            // 圖表數據 (將當前圖表轉換為圖片)
+            chart_image: null
+        };
+
+        // 獲取額外的加速因子參數（如果啟用）
+        if (reportData.af_params.enable_voltage) {
+            reportData.af_params.v_use = document.getElementById('v_use').value;
+            reportData.af_params.v_alt = document.getElementById('v_alt').value;
+            reportData.af_params.beta_v = document.getElementById('beta_v').value;
+        }
+        if (reportData.af_params.enable_tc) {
+            reportData.af_params.dt_use = document.getElementById('dt_use').value;
+            reportData.af_params.dt_alt = document.getElementById('dt_alt').value;
+            reportData.af_params.f_use = document.getElementById('f_use').value;
+            reportData.af_params.f_alt = document.getElementById('f_alt').value;
+            reportData.af_params.alpha_tc = document.getElementById('alpha_tc').value;
+            reportData.af_params.beta_tc = document.getElementById('beta_tc').value;
+        }
+        if (reportData.af_params.enable_vib) {
+            reportData.af_params.g_use = document.getElementById('g_use').value;
+            reportData.af_params.g_alt = document.getElementById('g_alt').value;
+            reportData.af_params.n_vib = document.getElementById('n_vib').value;
+        }
+        if (reportData.af_params.enable_uv) {
+            reportData.af_params.t_field_uv = document.getElementById('t_field_uv').value;
+            reportData.af_params.t_accel_uv = document.getElementById('t_accel_uv').value;
+        }
+        if (reportData.af_params.enable_chem) {
+            reportData.af_params.c_use = document.getElementById('c_use').value;
+            reportData.af_params.c_alt = document.getElementById('c_alt').value;
+            reportData.af_params.n_chem = document.getElementById('n_chem').value;
+        }
+        if (reportData.af_params.enable_rad) {
+            reportData.af_params.d_use = document.getElementById('d_use').value;
+            reportData.af_params.d_alt = document.getElementById('d_alt').value;
+            reportData.af_params.dose_rate = document.getElementById('dose_rate').value;
+            reportData.af_params.n_rad = document.getElementById('n_rad').value;
+        }
+        if (reportData.af_params.enable_eyring) {
+            reportData.af_params.eyring_stress_type = document.getElementById('eyring_stress_type').value;
+            reportData.af_params.eyring_d = document.getElementById('eyring_d').value;
+            reportData.af_params.eyring_a = document.getElementById('eyring_a').value;
+            reportData.af_params.eyring_b = document.getElementById('eyring_b').value;
+        }
+
+        // 導出圖表為圖片
+        const plotDiv = document.getElementById('plot');
+        if (plotDiv && plotDiv.data && plotDiv.data.length > 0) {
+            reportData.chart_image = await Plotly.toImage(plotDiv, {
+                format: 'png',
+                width: 1200,
+                height: 600
+            });
+        }
+
+        // 發送請求到後端生成 PDF
+        const response = await fetch('/generate_report', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(reportData)
+        });
+
+        if (!response.ok) {
+            throw new Error('生成報告失敗');
+        }
+
+        // 獲取 PDF 文件
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
+        a.download = `Reliability_Test_Report_${timestamp}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+
+        button.innerHTML = '<i class="bi bi-check-circle me-1"></i>報告已下載';
+        setTimeout(() => {
+            button.disabled = false;
+            button.innerHTML = '<i class="bi bi-file-earmark-pdf me-1"></i>生成測試報告 (PDF)';
+        }, 2000);
+
+    } catch (error) {
+        console.error('生成報告時發生錯誤:', error);
+        alert('生成報告時發生錯誤，請稍後重試');
+        button.disabled = false;
+        button.innerHTML = '<i class="bi bi-file-earmark-pdf me-1"></i>生成測試報告 (PDF)';
+    }
+}

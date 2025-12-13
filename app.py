@@ -409,5 +409,29 @@ def calculate():
         "reliability_result": final_results
     })
 
+@app.route('/generate_report', methods=['POST'])
+def generate_report():
+    """生成 PDF 測試報告"""
+    try:
+        from report_generator import generate_report_from_request
+        from flask import send_file
+
+        # 獲取請求數據
+        data = request.get_json()
+
+        # 生成 PDF
+        pdf_buffer = generate_report_from_request(data)
+
+        # 返回 PDF 文件
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'Reliability_Test_Report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+        )
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, port=5000)

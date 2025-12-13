@@ -232,8 +232,19 @@
                             <h6 class="text-uppercase text-white mb-3">模型常數 (CONSTANTS)</h6>
                             <div class="row g-2 mb-3">
                                 <div class="col-6">
-                                    <label class="form-label text-white">Ea (eV)</label>
-                                    <input type="number" class="form-control" id="ea" value="1.0" step="0.1">
+                                    <label class="form-label text-white">活化能 Ea (eV)</label>
+                                    <select class="form-select" id="ea_select" onchange="handleEaSelectChange()">
+                                        <option value="0.7">通用默認 (0.7 eV) - 業界標準</option>
+                                        <option value="0.9">半導體 IC - 高性能 (0.9 eV)</option>
+                                        <option value="0.6">半導體 IC - 一般 (0.6 eV)</option>
+                                        <option value="1.2">封裝鍵合線 (1.2 eV)</option>
+                                        <option value="0.8">電阻器 (0.8 eV)</option>
+                                        <option value="0.7_cap">電容器 (0.7 eV)</option>
+                                        <option value="0.6_solder">焊點 (0.6 eV)</option>
+                                        <option value="custom">自行輸入...</option>
+                                    </select>
+                                    <input type="number" class="form-control mt-2 d-none" id="ea" value="0.7" step="0.1" placeholder="請輸入 Ea 值 (eV)">
+                                    <div class="form-text text-warning small">選擇元件類型或自行輸入活化能</div>
                                 </div>
                                 <div class="col-6">
                                     <label class="form-label text-white">濕度 n</label>

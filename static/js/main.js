@@ -1,3 +1,21 @@
+// Handle Ea selection change
+function handleEaSelectChange() {
+    const selectValue = document.getElementById('ea_select').value;
+    const eaInput = document.getElementById('ea');
+
+    if (selectValue === 'custom') {
+        // Show custom input field
+        eaInput.classList.remove('d-none');
+        eaInput.focus();
+    } else {
+        // Hide custom input and set value from selection
+        eaInput.classList.add('d-none');
+        // Extract numeric value (remove suffix like _cap, _solder)
+        const numericValue = parseFloat(selectValue.split('_')[0]);
+        eaInput.value = numericValue;
+    }
+}
+
 // Toggle function for AF sections and result cards
 function toggleAFSection(afType) {
     if (afType === 'tc') {

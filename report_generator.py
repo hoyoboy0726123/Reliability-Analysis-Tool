@@ -17,6 +17,14 @@ import base64
 import io
 from PIL import Image as PILImage
 
+# 導入圖表生成模組
+try:
+    from chart_generator import generate_all_charts
+    CHARTS_AVAILABLE = True
+except ImportError as e:
+    print(f"Warning: chart_generator not available: {e}")
+    CHARTS_AVAILABLE = False
+
 # 嘗試註冊中文字體（如果系統有的話）
 CHINESE_FONT = 'Helvetica'  # 默認使用 Helvetica
 try:
@@ -98,15 +106,70 @@ def generate_reliability_report(data, output_file):
         fontName=CHINESE_FONT if CHINESE_FONT != 'Helvetica' else 'Helvetica'
     )
 
-    # 1. 報告標題
-    story.append(Paragraph("Reliability Test Report", title_style))
-    story.append(Paragraph("可靠度測試報告", title_style))
+    # ====== 封面頁 ======
+    # 大標題樣式
+    cover_title_style = ParagraphStyle(
+        'CoverTitle',
+        parent=styles['Heading1'],
+        fontSize=32,
+        textColor=colors.HexColor('#1a5490'),
+        spaceAfter=20,
+        alignment=TA_CENTER,
+        fontName=CHINESE_FONT if CHINESE_FONT != 'Helvetica' else 'Helvetica-Bold',
+        leading=40
+    )
+
+    cover_subtitle_style = ParagraphStyle(
+        'CoverSubtitle',
+        parent=styles['Heading2'],
+        fontSize=24,
+        textColor=colors.HexColor('#374151'),
+        spaceAfter=60,
+        alignment=TA_CENTER,
+        fontName=CHINESE_FONT if CHINESE_FONT != 'Helvetica' else 'Helvetica'
+    )
+
+    # 封面內容
+    story.append(Spacer(1, 2.5*inch))
+    story.append(Paragraph("RELIABILITY TEST REPORT", cover_title_style))
+    story.append(Paragraph("可靠度測試報告", cover_subtitle_style))
+
+    # 封面資訊框
+    cover_info = [
+        ['Report Date / 報告日期', datetime.now().strftime('%Y-%m-%d')],
+        ['Analysis Mode / 分析模式', data.get('analysis_mode', 'N/A').upper()],
+        ['', ''],
+        ['Prepared by / 報告產生', 'Reliability Analysis Tool'],
+        ['', 'AFR/MTBF Analysis System']
+    ]
+
+    cover_table = Table(cover_info, colWidths=[3*inch, 3*inch])
+    cover_table.setStyle(TableStyle([
+        ('FONTNAME', (0, 0), (-1, -1), CHINESE_FONT if CHINESE_FONT != 'Helvetica' else 'Helvetica'),
+        ('FONTSIZE', (0, 0), (-1, -1), 12),
+        ('TEXTCOLOR', (0, 0), (0, -1), colors.HexColor('#6b7280')),
+        ('TEXTCOLOR', (1, 0), (1, -1), colors.HexColor('#1f2937')),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#f9fafb')),
+        ('BOX', (0, 0), (-1, -1), 1.5, colors.HexColor('#2563eb')),
+        ('TOPPADDING', (0, 0), (-1, -1), 12),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 12),
+    ]))
+
+    story.append(cover_table)
+    story.append(PageBreak())
+
+    # ====== 第 1 頁：參數總覽 ======
+    story.append(Paragraph("REPORT SUMMARY / 報告摘要", title_style))
     story.append(Spacer(1, 20))
 
-    # 2. 報告資訊
+    # 報告資訊
     report_info = [
         ['Report Date / 報告日期:', datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
-        ['Analysis Mode / 分析模式:', data.get('analysis_mode', 'N/A').upper()]
+        ['Analysis Mode / 分析模式:', data.get('analysis_mode', 'N/A').upper()],
+        ['Test Duration / 測試時長:', f"{data.get('test_data', {}).get('t_test', 'N/A')} hours"],
+        ['Mission Time / 任務時間:', f"{data.get('test_data', {}).get('mission_years', 'N/A')} years"]
     ]
 
     info_table = Table(report_info, colWidths=[2.5*inch, 4*inch])
@@ -391,27 +454,57 @@ def generate_reliability_report(data, output_file):
     story.append(reliability_table)
     story.append(Spacer(1, 30))
 
-    # 7. 圖表
-    chart_image = data.get('chart_image')
-    if chart_image:
-        story.append(Paragraph("5. Analysis Chart / 分析圖表", heading_style))
-        story.append(Spacer(1, 10))
+    # 7. 分析圖表（三張）
+    story.append(PageBreak())
+    story.append(Paragraph("5. Analysis Charts / 分析圖表", heading_style))
+    story.append(Spacer(1, 10))
 
+    # 生成圖表
+    if CHARTS_AVAILABLE:
         try:
-            # 從 base64 解碼圖片
-            if chart_image.startswith('data:image'):
-                chart_image = chart_image.split(',')[1]
+            print("Generating charts...")
+            charts = generate_all_charts(
+                analysis_mode=analysis_mode,
+                weibull_result=wb_data if analysis_mode == 'weibull' else None,
+                reliability_result=reliability_result,
+                max_time=50000
+            )
 
-            image_data = base64.b64decode(chart_image)
-            image_buffer = io.BytesIO(image_data)
+            # 圖表 1: 可靠度函數 R(t)
+            if 'reliability' in charts and charts['reliability']:
+                story.append(Paragraph("5.1 Reliability Function R(t) / 可靠度函數", normal_style))
+                story.append(Spacer(1, 8))
+                img = Image(charts['reliability'], width=6.5*inch, height=4*inch)
+                story.append(img)
+                story.append(Spacer(1, 20))
 
-            # 創建圖片對象
-            img = Image(image_buffer, width=6.5*inch, height=3.25*inch)
-            story.append(img)
-            story.append(Spacer(1, 20))
+            # 圖表 2: 失效率 h(t)
+            if 'failure_rate' in charts and charts['failure_rate']:
+                story.append(Paragraph("5.2 Failure Rate h(t) / 失效率", normal_style))
+                story.append(Spacer(1, 8))
+                img = Image(charts['failure_rate'], width=6.5*inch, height=4*inch)
+                story.append(img)
+                story.append(Spacer(1, 20))
+
+            # 圖表 3: 機率密度函數 f(t)
+            if 'pdf' in charts and charts['pdf']:
+                story.append(PageBreak())
+                story.append(Paragraph("5.3 Probability Density Function f(t) / 機率密度函數", normal_style))
+                story.append(Spacer(1, 8))
+                img = Image(charts['pdf'], width=6.5*inch, height=4*inch)
+                story.append(img)
+                story.append(Spacer(1, 20))
+
+            print("Charts generated successfully")
         except Exception as e:
-            story.append(Paragraph(f"Chart unavailable / 圖表無法顯示: {str(e)}", normal_style))
+            print(f"Error generating charts: {e}")
+            import traceback
+            traceback.print_exc()
+            story.append(Paragraph(f"Charts unavailable / 圖表無法生成: {str(e)}", normal_style))
             story.append(Spacer(1, 20))
+    else:
+        story.append(Paragraph("Charts module not available / 圖表模組不可用", normal_style))
+        story.append(Spacer(1, 20))
 
     # 8. 結論
     story.append(PageBreak())

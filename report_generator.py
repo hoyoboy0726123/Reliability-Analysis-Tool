@@ -526,8 +526,8 @@ def generate_reliability_report(data, output_file):
     )
 
     # 處理結論格式（支持 HTML 標籤）
-    # 替換特殊符號避免亂碼
-    conclusion = conclusion.replace('⚠️', '[!]').replace('✓', '[✓]').replace('✗', '[✗]')
+    # 替換特殊符號避免亂碼（使用純文字符號）
+    conclusion = conclusion.replace('⚠️', '[!]').replace('✓', '[OK]').replace('✗', '[X]')
 
     # 轉換 HTML 標籤為 reportlab 格式（一次性合併處理）
     # 處理所有 class 樣式的 strong 標籤

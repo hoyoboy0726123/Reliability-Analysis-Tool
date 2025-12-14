@@ -64,122 +64,116 @@ def set_cell_background(cell, color):
 def parse_html_conclusion(doc, html_text):
     """
     將 HTML 格式的結論轉換為 Word 段落
-    這個函數會創建多個段落以正確顯示格式
+    使用與 PDF 相同的處理邏輯
     """
-    # 替換特殊符號
+    # 替換特殊符號（與 PDF 一致）
     html_text = html_text.replace('⚠️', '[!]').replace('✓', '[OK]').replace('✗', '[X]')
 
-    # 清理多餘的空白
-    html_text = html_text.strip()
+    # 轉換 HTML 標籤為統一格式（與 PDF 一致）
+    html_text = re.sub(r'<strong class="text-warning">(.*?)</strong>',
+                       r'<font color="#f59e0b"><b>\1</b></font>', html_text, flags=re.DOTALL)
+    html_text = re.sub(r'<strong class="text-danger">(.*?)</strong>',
+                       r'<font color="#dc2626"><b>\1</b></font>', html_text, flags=re.DOTALL)
+    html_text = re.sub(r'<strong class="text-success">(.*?)</strong>',
+                       r'<font color="#10b981"><b>\1</b></font>', html_text, flags=re.DOTALL)
+    html_text = re.sub(r'<strong class="text-info">(.*?)</strong>',
+                       r'<font color="#0ea5e9"><b>\1</b></font>', html_text, flags=re.DOTALL)
 
-    # 顏色映射
-    color_map = {
-        'text-warning': '#f59e0b',  # 橙色
-        'text-danger': '#dc2626',   # 紅色
-        'text-success': '#10b981',  # 綠色
-        'text-info': '#0ea5e9'      # 藍色
-    }
+    # 處理一般 strong 標籤（與 PDF 一致）
+    html_text = re.sub(r'<strong>(.*?)</strong>', r'<b>\1</b>', html_text, flags=re.DOTALL)
 
-    # 先處理 <strong class="..."> 轉換為帶顏色的標記
-    for class_name, color in color_map.items():
-        html_text = re.sub(
-            rf'<strong class="{class_name}">(.*?)</strong>',
-            rf'<COLORED color="{color}" bold="true">\1</COLORED>',
-            html_text,
-            flags=re.DOTALL
-        )
+    # 處理換行和列表（與 PDF 一致）
+    html_text = html_text.replace('<br><br>', '|||PARA|||').replace('<br>', '<br/>')
+    html_text = html_text.replace('<ul class="mb-0 mt-2">', '').replace('<ul>', '').replace('</ul>', '')
+    html_text = re.sub(r'<li>(.*?)</li>', r'• \1<br/>', html_text, flags=re.DOTALL)
+    html_text = re.sub(r' class="[^"]*"', '', html_text)
 
-    # 處理普通 <strong> 標籤
-    html_text = re.sub(r'<strong>(.*?)</strong>', r'<BOLD>\1</BOLD>', html_text, flags=re.DOTALL)
+    # 分段處理（與 PDF 一致）
+    paragraphs = html_text.split('|||PARA|||')
 
-    # 分割段落 (<br><br> 表示段落分隔)
-    paragraphs = re.split(r'<br\s*/?>\s*<br\s*/?>', html_text)
-
-    for para_text in paragraphs:
-        para_text = para_text.strip()
-        if not para_text:
+    for para in paragraphs:
+        para = para.strip()
+        if not para:
             continue
 
-        # 檢查是否是列表
-        if '<ul' in para_text or '<li>' in para_text:
-            # 處理列表
-            # 移除 <ul> 標籤
-            para_text = re.sub(r'<ul[^>]*>', '', para_text)
-            para_text = re.sub(r'</ul>', '', para_text)
+        # 移除空白的 div 標籤
+        para = re.sub(r'<div[^>]*>\s*</div>', '', para)
+        para = para.replace('<div class="small text-muted mt-2">', '<font size="9" color="#6b7280">')
+        para = para.replace('</div>', '</font>')
 
-            # 分割列表項目
-            items = re.findall(r'<li>(.*?)</li>', para_text, re.DOTALL)
-
-            # 如果有列表項目之前的文字
-            before_list = re.split(r'<li>', para_text)[0]
-            before_list = re.sub(r'<ul[^>]*>', '', before_list).strip()
-
-            if before_list:
-                p = doc.add_paragraph()
-                add_formatted_text(p, before_list)
-
-            # 添加列表項目
-            for item in items:
-                item = item.strip()
-                if item:
-                    p = doc.add_paragraph()
-                    p.add_run('• ')
-                    add_formatted_text(p, item)
-        else:
-            # 普通段落
+        try:
+            # 創建段落並解析內容
             p = doc.add_paragraph()
-            add_formatted_text(p, para_text)
+            parse_paragraph_content(p, para)
+        except Exception as e:
+            # 如果失敗，使用純文字版本
+            print(f"Error rendering conclusion paragraph: {e}")
+            plain_text = re.sub(r'<[^>]+>', '', para)
+            p = doc.add_paragraph(plain_text)
 
 
-def add_formatted_text(paragraph, text):
-    """添加格式化文字到段落"""
-    # 移除單獨的 <br>
-    text = re.sub(r'<br\s*/?>', ' ', text)
+def parse_paragraph_content(paragraph, html_text):
+    """
+    解析段落內容，處理格式標籤
+    支援：<font color="..."><b>text</b></font>, <b>text</b>, <br/>
+    """
+    # 處理帶顏色的粗體文字：<font color="#xxx"><b>text</b></font>
+    pattern_colored_bold = r'<font color="([^"]+)"><b>(.*?)</b></font>'
 
-    # 移除未處理的 HTML 標籤
-    text = re.sub(r'<div[^>]*>', '', text)
-    text = re.sub(r'</div>', '', text)
+    # 處理純粗體文字：<b>text</b>
+    pattern_bold = r'<b>(.*?)</b>'
 
-    # 處理 <COLORED> 標籤（帶顏色和粗體）
-    pattern = r'<COLORED color="([^"]+)" bold="true">(.*?)</COLORED>'
-    last_end = 0
+    # 處理換行：<br/>
+    html_text = html_text.replace('<br/>', '\n')
 
-    for match in re.finditer(pattern, text, re.DOTALL):
-        # 添加匹配前的文字
-        if match.start() > last_end:
-            plain_text = text[last_end:match.start()]
-            add_simple_formatted_text(paragraph, plain_text)
+    pos = 0
+    while pos < len(html_text):
+        # 尋找下一個標籤
+        match_colored = re.search(pattern_colored_bold, html_text[pos:], re.DOTALL)
+        match_bold = re.search(pattern_bold, html_text[pos:], re.DOTALL)
 
-        # 添加帶顏色和粗體的文字
-        color = match.group(1)
-        colored_text = match.group(2)
-        add_colored_text(paragraph, colored_text, color=color, bold=True)
-        last_end = match.end()
+        # 確定最近的匹配
+        next_match = None
+        match_type = None
 
-    # 添加剩餘的文字
-    if last_end < len(text):
-        remaining = text[last_end:]
-        add_simple_formatted_text(paragraph, remaining)
+        if match_colored and match_bold:
+            if match_colored.start() < match_bold.start():
+                next_match = match_colored
+                match_type = 'colored'
+            else:
+                next_match = match_bold
+                match_type = 'bold'
+        elif match_colored:
+            next_match = match_colored
+            match_type = 'colored'
+        elif match_bold:
+            next_match = match_bold
+            match_type = 'bold'
 
+        if next_match:
+            # 添加匹配前的普通文字
+            if next_match.start() > 0:
+                plain_text = html_text[pos:pos + next_match.start()]
+                if plain_text:
+                    paragraph.add_run(plain_text)
 
-def add_simple_formatted_text(paragraph, text):
-    """添加簡單格式化文字（處理 <BOLD> 標籤）"""
-    # 處理 <BOLD> 標籤
-    parts = re.split(r'<BOLD>(.*?)</BOLD>', text, flags=re.DOTALL)
+            # 添加格式化文字
+            if match_type == 'colored':
+                color = next_match.group(1)
+                text = next_match.group(2)
+                add_colored_text(paragraph, text, color=color, bold=True)
+            else:  # bold
+                text = next_match.group(1)
+                run = paragraph.add_run(text)
+                run.bold = True
 
-    for i, part in enumerate(parts):
-        part = part.strip()
-        if not part:
-            continue
-
-        if i % 2 == 0:
-            # 普通文字
-            if part:
-                paragraph.add_run(part)
+            pos = pos + next_match.end()
         else:
-            # 粗體文字
-            run = paragraph.add_run(part)
-            run.bold = True
+            # 沒有更多標籤，添加剩餘文字
+            remaining = html_text[pos:]
+            if remaining:
+                paragraph.add_run(remaining)
+            break
 
 
 def generate_word_report(data, output_file):

@@ -61,69 +61,125 @@ def set_cell_background(cell, color):
     cell._element.get_or_add_tcPr().append(shading_elm)
 
 
-def parse_html_to_runs(paragraph, html_text):
-    """將 HTML 格式文字轉換為 Word 段落的多個 run"""
+def parse_html_conclusion(doc, html_text):
+    """
+    將 HTML 格式的結論轉換為 Word 段落
+    這個函數會創建多個段落以正確顯示格式
+    """
     # 替換特殊符號
     html_text = html_text.replace('⚠️', '[!]').replace('✓', '[OK]').replace('✗', '[X]')
 
-    # 處理段落分隔符
-    parts = html_text.split('|||PARA|||')
+    # 清理多餘的空白
+    html_text = html_text.strip()
 
-    for part_idx, part in enumerate(parts):
-        if part_idx > 0:
-            # 添加兩個換行符表示段落分隔
-            paragraph.add_run('\n\n')
+    # 顏色映射
+    color_map = {
+        'text-warning': '#f59e0b',  # 橙色
+        'text-danger': '#dc2626',   # 紅色
+        'text-success': '#10b981',  # 綠色
+        'text-info': '#0ea5e9'      # 藍色
+    }
 
-        # 使用正則表達式解析 HTML 標籤
-        # 匹配 <font color="#xxx"><b>text</b></font>
-        pattern = r'<font color="([^"]+)"><b>(.*?)</b></font>'
-        last_end = 0
+    # 先處理 <strong class="..."> 轉換為帶顏色的標記
+    for class_name, color in color_map.items():
+        html_text = re.sub(
+            rf'<strong class="{class_name}">(.*?)</strong>',
+            rf'<COLORED color="{color}" bold="true">\1</COLORED>',
+            html_text,
+            flags=re.DOTALL
+        )
 
-        for match in re.finditer(pattern, part, re.DOTALL):
-            # 添加匹配前的普通文字
-            if match.start() > last_end:
-                plain_text = part[last_end:match.start()]
-                # 處理純 <b> 標籤
-                process_simple_tags_in_paragraph(paragraph, plain_text)
+    # 處理普通 <strong> 標籤
+    html_text = re.sub(r'<strong>(.*?)</strong>', r'<BOLD>\1</BOLD>', html_text, flags=re.DOTALL)
 
-            # 添加帶顏色和粗體的文字
-            color = match.group(1)
-            text = match.group(2)
-            text = re.sub(r'<br\s*/?>', '\n', text)
-            add_colored_text(paragraph, text, color=color, bold=True)
-            last_end = match.end()
+    # 分割段落 (<br><br> 表示段落分隔)
+    paragraphs = re.split(r'<br\s*/?>\s*<br\s*/?>', html_text)
 
-        # 添加剩餘的普通文字
-        if last_end < len(part):
-            remaining = part[last_end:]
-            process_simple_tags_in_paragraph(paragraph, remaining)
+    for para_text in paragraphs:
+        para_text = para_text.strip()
+        if not para_text:
+            continue
+
+        # 檢查是否是列表
+        if '<ul' in para_text or '<li>' in para_text:
+            # 處理列表
+            # 移除 <ul> 標籤
+            para_text = re.sub(r'<ul[^>]*>', '', para_text)
+            para_text = re.sub(r'</ul>', '', para_text)
+
+            # 分割列表項目
+            items = re.findall(r'<li>(.*?)</li>', para_text, re.DOTALL)
+
+            # 如果有列表項目之前的文字
+            before_list = re.split(r'<li>', para_text)[0]
+            before_list = re.sub(r'<ul[^>]*>', '', before_list).strip()
+
+            if before_list:
+                p = doc.add_paragraph()
+                add_formatted_text(p, before_list)
+
+            # 添加列表項目
+            for item in items:
+                item = item.strip()
+                if item:
+                    p = doc.add_paragraph()
+                    p.add_run('• ')
+                    add_formatted_text(p, item)
+        else:
+            # 普通段落
+            p = doc.add_paragraph()
+            add_formatted_text(p, para_text)
 
 
-def process_simple_tags_in_paragraph(paragraph, text):
-    """處理簡單的 HTML 標籤 (b, br, 項目符號等)"""
-    # 移除所有未處理的 HTML 標籤 (div, span 等)
+def add_formatted_text(paragraph, text):
+    """添加格式化文字到段落"""
+    # 移除單獨的 <br>
+    text = re.sub(r'<br\s*/?>', ' ', text)
+
+    # 移除未處理的 HTML 標籤
     text = re.sub(r'<div[^>]*>', '', text)
     text = re.sub(r'</div>', '', text)
-    text = re.sub(r'<span[^>]*>', '', text)
-    text = re.sub(r'</span>', '', text)
 
-    # 處理 <b> 標籤
-    parts = re.split(r'<b>(.*?)</b>', text, flags=re.DOTALL)
+    # 處理 <COLORED> 標籤（帶顏色和粗體）
+    pattern = r'<COLORED color="([^"]+)" bold="true">(.*?)</COLORED>'
+    last_end = 0
+
+    for match in re.finditer(pattern, text, re.DOTALL):
+        # 添加匹配前的文字
+        if match.start() > last_end:
+            plain_text = text[last_end:match.start()]
+            add_simple_formatted_text(paragraph, plain_text)
+
+        # 添加帶顏色和粗體的文字
+        color = match.group(1)
+        colored_text = match.group(2)
+        add_colored_text(paragraph, colored_text, color=color, bold=True)
+        last_end = match.end()
+
+    # 添加剩餘的文字
+    if last_end < len(text):
+        remaining = text[last_end:]
+        add_simple_formatted_text(paragraph, remaining)
+
+
+def add_simple_formatted_text(paragraph, text):
+    """添加簡單格式化文字（處理 <BOLD> 標籤）"""
+    # 處理 <BOLD> 標籤
+    parts = re.split(r'<BOLD>(.*?)</BOLD>', text, flags=re.DOTALL)
+
     for i, part in enumerate(parts):
+        part = part.strip()
+        if not part:
+            continue
+
         if i % 2 == 0:
             # 普通文字
-            part = re.sub(r'<br\s*/?>', '\n', part)
-            # 處理項目符號
-            part = re.sub(r'•\s*', '• ', part)
-            # 清理空白但保留內容
-            if part.strip():
+            if part:
                 paragraph.add_run(part)
         else:
             # 粗體文字
-            part = re.sub(r'<br\s*/?>', '\n', part)
-            if part.strip():
-                run = paragraph.add_run(part)
-                run.bold = True
+            run = paragraph.add_run(part)
+            run.bold = True
 
 
 def generate_word_report(data, output_file):
@@ -385,8 +441,18 @@ def generate_word_report(data, output_file):
     charts_added = False
     if CHARTS_AVAILABLE:
         try:
+            # 提取數據
+            analysis_mode = data.get('analysis_mode', 'weibull')
+            weibull_result = data.get('results', {}).get('weibull_result')
+            reliability_result = data.get('results', {}).get('reliability_result')
+
             # 嘗試生成圖表
-            charts = generate_all_charts(data)
+            charts = generate_all_charts(
+                analysis_mode=analysis_mode,
+                weibull_result=weibull_result if analysis_mode == 'weibull' else None,
+                reliability_result=reliability_result,
+                max_time=50000
+            )
 
             # 檢查是否有有效的圖表
             valid_charts = {k: v for k, v in charts.items() if v}
@@ -397,23 +463,22 @@ def generate_word_report(data, output_file):
                 heading.runs[0].font.color.rgb = RGBColor(26, 84, 144)
 
                 # 添加圖表
-                for i, (chart_name, chart_base64) in enumerate(valid_charts.items(), start=1):
+                for i, (chart_name, chart_buffer) in enumerate(valid_charts.items(), start=1):
                     try:
-                        # 解碼 base64 圖片
-                        img_data = base64.b64decode(chart_base64.split(',')[1] if ',' in chart_base64 else chart_base64)
-                        img_stream = io.BytesIO(img_data)
+                        # chart_buffer 是 BytesIO 對象
+                        chart_buffer.seek(0)  # 重置指針到開始
 
                         # 添加圖表標題
                         chart_titles = {
-                            'weibull_plot': 'Weibull 機率圖',
-                            'reliability_curve': '可靠度曲線',
-                            'hazard_rate': '失效率曲線'
+                            'reliability': '可靠度曲線 R(t)',
+                            'failure_rate': '失效率曲線 λ(t)',
+                            'pdf': '機率密度函數 f(t)'
                         }
 
                         doc.add_heading(f'5.{i} {chart_titles.get(chart_name, chart_name)}', level=2)
 
-                        # 插入圖片
-                        doc.add_picture(img_stream, width=Inches(6))
+                        # 插入圖片（直接使用 BytesIO）
+                        doc.add_picture(chart_buffer, width=Inches(6))
 
                         # 置中
                         last_paragraph = doc.paragraphs[-1]
@@ -423,6 +488,8 @@ def generate_word_report(data, output_file):
                         charts_added = True
                     except Exception as e:
                         print(f"Error adding chart {chart_name}: {e}")
+                        import traceback
+                        traceback.print_exc()
 
         except Exception as e:
             print(f"Error generating charts for Word: {e}")
@@ -437,28 +504,8 @@ def generate_word_report(data, output_file):
 
     conclusion_html = data.get('conclusion', '')
     if conclusion_html and conclusion_html.strip():
-        # 轉換 HTML 標籤為 reportlab 格式
-        conclusion_html = conclusion_html.replace('⚠️', '[!]').replace('✓', '[OK]').replace('✗', '[X]')
-
-        # 轉換 HTML 標籤
-        conclusion_html = re.sub(r'<strong class="text-warning">(.*?)</strong>',
-                                r'<font color="#f59e0b"><b>\1</b></font>', conclusion_html, flags=re.DOTALL)
-        conclusion_html = re.sub(r'<strong class="text-danger">(.*?)</strong>',
-                                r'<font color="#dc2626"><b>\1</b></font>', conclusion_html, flags=re.DOTALL)
-        conclusion_html = re.sub(r'<strong class="text-success">(.*?)</strong>',
-                                r'<font color="#10b981"><b>\1</b></font>', conclusion_html, flags=re.DOTALL)
-        conclusion_html = re.sub(r'<strong class="text-info">(.*?)</strong>',
-                                r'<font color="#0ea5e9"><b>\1</b></font>', conclusion_html, flags=re.DOTALL)
-
-        conclusion_html = re.sub(r'<strong>(.*?)</strong>', r'<b>\1</b>', conclusion_html, flags=re.DOTALL)
-        conclusion_html = conclusion_html.replace('<br><br>', '|||PARA|||').replace('<br>', '<br/>')
-        conclusion_html = conclusion_html.replace('<ul class="mb-0 mt-2">', '').replace('<ul>', '').replace('</ul>', '')
-        conclusion_html = re.sub(r'<li>(.*?)</li>', r'• \1<br/>', conclusion_html, flags=re.DOTALL)
-        conclusion_html = re.sub(r' class="[^"]*"', '', conclusion_html)
-
-        # 創建段落並解析 HTML
-        p = doc.add_paragraph()
-        parse_html_to_runs(p, conclusion_html)
+        # 使用新的解析器處理結論
+        parse_html_conclusion(doc, conclusion_html)
     else:
         doc.add_paragraph('無結論內容')
 

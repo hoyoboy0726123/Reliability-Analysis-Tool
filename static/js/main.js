@@ -601,11 +601,21 @@ function renderChart() {
     Plotly.newPlot(plotDiv, traces, layout);
 }
 
-// Generate PDF Report
-async function generatePDFReport() {
+// Generate Report (PDF or Word)
+async function generateReport(format = 'pdf') {
     const button = document.getElementById('generate_report_btn');
     button.disabled = true;
-    button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>生成中...';
+
+    const formatIcons = {
+        'pdf': '<i class="bi bi-file-earmark-pdf me-1"></i>',
+        'word': '<i class="bi bi-file-earmark-word me-1"></i>'
+    };
+    const formatNames = {
+        'pdf': 'PDF',
+        'word': 'Word'
+    };
+
+    button.innerHTML = '<i class="bi bi-hourglass-split me-1"></i>生成 ' + formatNames[format] + ' 中...';
 
     try {
         // 收集所有參數數據
@@ -709,7 +719,10 @@ async function generatePDFReport() {
             }
         }
 
-        // 發送請求到後端生成 PDF
+        // 添加格式參數
+        reportData.format = format;
+
+        // 發送請求到後端生成報告
         const response = await fetch('/generate_report', {
             method: 'POST',
             headers: {
@@ -722,22 +735,29 @@ async function generatePDFReport() {
             throw new Error('生成報告失敗');
         }
 
-        // 獲取 PDF 文件
+        // 獲取文件
         const blob = await response.blob();
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
-        a.download = `Reliability_Test_Report_${timestamp}.pdf`;
+
+        // 根據格式設置文件擴展名
+        const fileExtensions = {
+            'pdf': '.pdf',
+            'word': '.docx'
+        };
+        a.download = `Reliability_Test_Report_${timestamp}${fileExtensions[format]}`;
+
         document.body.appendChild(a);
         a.click();
         window.URL.revokeObjectURL(url);
         document.body.removeChild(a);
 
-        button.innerHTML = '<i class="bi bi-check-circle me-1"></i>報告已下載';
+        button.innerHTML = formatIcons[format] + ' ' + formatNames[format] + ' 已下載';
         setTimeout(() => {
             button.disabled = false;
-            button.innerHTML = '<i class="bi bi-file-earmark-pdf me-1"></i>生成測試報告 (PDF)';
+            button.innerHTML = '<i class="bi bi-file-earmark-text me-1"></i>生成測試報告';
         }, 2000);
 
     } catch (error) {

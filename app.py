@@ -448,33 +448,50 @@ def calculate():
 
 @app.route('/generate_report', methods=['POST'])
 def generate_report():
-    """生成 PDF 測試報告"""
+    """生成測試報告 (PDF 或 Word)"""
     try:
-        print("\n=== PDF Report Generation Request ===")
-        from report_generator import generate_report_from_request
         from flask import send_file
         import traceback
 
         # 獲取請求數據
         data = request.get_json()
-        print(f"Received data with keys: {data.keys() if data else 'None'}")
 
         if not data:
             print("ERROR: No data received")
             return jsonify({"error": "No data received"}), 400
 
-        # 生成 PDF
-        print("Calling generate_report_from_request...")
-        pdf_buffer = generate_report_from_request(data)
-        print("PDF buffer generated successfully")
+        # 獲取格式參數 (默認為 PDF)
+        report_format = data.get('format', 'pdf').lower()
+        print(f"\n=== Report Generation Request (Format: {report_format.upper()}) ===")
+        print(f"Received data with keys: {data.keys()}")
 
-        # 返回 PDF 文件
-        filename = f'Reliability_Test_Report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+        # 根據格式生成報告
+        if report_format == 'word':
+            # 生成 Word 文件
+            from word_generator import generate_report_from_request as generate_word
+            print("Calling Word generator...")
+            report_buffer = generate_word(data)
+            print("Word buffer generated successfully")
+
+            # 返回 Word 文件
+            filename = f'Reliability_Test_Report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.docx'
+            mimetype = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+        else:
+            # 生成 PDF 文件 (默認)
+            from report_generator import generate_report_from_request as generate_pdf
+            print("Calling PDF generator...")
+            report_buffer = generate_pdf(data)
+            print("PDF buffer generated successfully")
+
+            # 返回 PDF 文件
+            filename = f'Reliability_Test_Report_{datetime.now().strftime("%Y%m%d_%H%M%S")}.pdf'
+            mimetype = 'application/pdf'
+
         print(f"Sending file: {filename}")
 
         return send_file(
-            pdf_buffer,
-            mimetype='application/pdf',
+            report_buffer,
+            mimetype=mimetype,
             as_attachment=True,
             download_name=filename
         )

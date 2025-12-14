@@ -636,9 +636,23 @@
                                                         <h6 class="alert-heading fw-bold text-info mb-0">
                                                             <i class="bi bi-lightbulb-fill me-2"></i>分析結論 (Conclusion)
                                                         </h6>
-                                                        <button class="btn btn-sm btn-info" id="generate_report_btn" onclick="generatePDFReport()">
-                                                            <i class="bi bi-file-earmark-pdf me-1"></i>生成測試報告 (PDF)
-                                                        </button>
+                                                        <div class="btn-group" role="group">
+                                                            <button type="button" class="btn btn-sm btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="generate_report_btn">
+                                                                <i class="bi bi-file-earmark-text me-1"></i>生成測試報告
+                                                            </button>
+                                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                                <li>
+                                                                    <a class="dropdown-item" href="#" onclick="generateReport('pdf'); return false;">
+                                                                        <i class="bi bi-file-earmark-pdf me-2 text-danger"></i>PDF 格式
+                                                                    </a>
+                                                                </li>
+                                                                <li>
+                                                                    <a class="dropdown-item" href="#" onclick="generateReport('word'); return false;">
+                                                                        <i class="bi bi-file-earmark-word me-2 text-primary"></i>Word 格式 (.docx)
+                                                                    </a>
+                                                                </li>
+                                                            </ul>
+                                                        </div>
                                                     </div>
                                                     <p class="mb-0 text-light" id="conclusion_text"
                                                         style="line-height: 1.6; font-size: 0.95rem;">

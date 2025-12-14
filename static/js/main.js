@@ -644,8 +644,8 @@ async function generatePDFReport() {
             // 分析模式
             analysis_mode: currentMode,
 
-            // 結論文字
-            conclusion: document.getElementById('conclusion_text').innerText,
+            // 結論文字（使用 innerHTML 保留 HTML 格式標籤）
+            conclusion: document.getElementById('conclusion_text').innerHTML,
 
             // 圖表數據 (將當前圖表轉換為圖片)
             chart_image: null

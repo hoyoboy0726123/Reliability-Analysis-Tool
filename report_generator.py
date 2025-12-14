@@ -45,6 +45,15 @@ except Exception as e:
         # 如果都失敗，使用 Helvetica（不支援中文，但至少不會報錯）
         print("Using Helvetica font (no Chinese support)")
 
+def format_af_value(value):
+    """安全格式化 AF 值"""
+    if value is None or value == 'N/A' or (isinstance(value, str) and value.strip() == ''):
+        return 'N/A'
+    try:
+        return f"{float(value):,.4f}"
+    except (ValueError, TypeError):
+        return str(value)
+
 def generate_reliability_report(data, output_file):
     """
     生成可靠度測試報告 PDF
@@ -310,26 +319,26 @@ def generate_reliability_report(data, output_file):
     ]
 
     if af_params.get('enable_temp', True):
-        af_result_data.append(['AF (Temperature) / 溫度', f"{af_result.get('af_t', 'N/A'):,.4f}"])
+        af_result_data.append(['AF (Temperature) / 溫度', format_af_value(af_result.get('af_t'))])
     if af_params.get('enable_hum', True):
-        af_result_data.append(['AF (Humidity) / 濕度', f"{af_result.get('af_rh', 'N/A'):,.4f}"])
+        af_result_data.append(['AF (Humidity) / 濕度', format_af_value(af_result.get('af_rh'))])
     if af_params.get('enable_voltage', False):
-        af_result_data.append(['AF (Voltage) / 電壓', f"{af_result.get('af_v', 'N/A'):,.4f}"])
+        af_result_data.append(['AF (Voltage) / 電壓', format_af_value(af_result.get('af_v'))])
     if af_params.get('enable_tc', False):
-        af_result_data.append(['AF (Thermal Cycling) / 熱循環', f"{af_result.get('af_tc', 'N/A'):,.4f}"])
+        af_result_data.append(['AF (Thermal Cycling) / 熱循環', format_af_value(af_result.get('af_tc'))])
     if af_params.get('enable_vib', False):
-        af_result_data.append(['AF (Vibration) / 振動', f"{af_result.get('af_vib', 'N/A'):,.4f}"])
+        af_result_data.append(['AF (Vibration) / 振動', format_af_value(af_result.get('af_vib'))])
     if af_params.get('enable_uv', False):
-        af_result_data.append(['AF (UV) / 紫外線', f"{af_result.get('af_uv', 'N/A'):,.4f}"])
+        af_result_data.append(['AF (UV) / 紫外線', format_af_value(af_result.get('af_uv'))])
     if af_params.get('enable_chem', False):
-        af_result_data.append(['AF (Chemical) / 化學', f"{af_result.get('af_chem', 'N/A'):,.4f}"])
+        af_result_data.append(['AF (Chemical) / 化學', format_af_value(af_result.get('af_chem'))])
     if af_params.get('enable_rad', False):
-        af_result_data.append(['AF (Radiation) / 輻射', f"{af_result.get('af_rad', 'N/A'):,.4f}"])
+        af_result_data.append(['AF (Radiation) / 輻射', format_af_value(af_result.get('af_rad'))])
     if af_params.get('enable_eyring', False) and af_result.get('af_eyring_correction'):
-        af_result_data.append(['Eyring Correction / Eyring 修正因子', f"{af_result.get('af_eyring_correction', 'N/A'):,.4f}"])
+        af_result_data.append(['Eyring Correction / Eyring 修正因子', format_af_value(af_result.get('af_eyring_correction'))])
 
     af_result_data.append(['', ''])  # 空行
-    af_result_data.append(['AF Total / 總加速因子', f"{af_result.get('af_total', 'N/A'):,.4f}"])
+    af_result_data.append(['AF Total / 總加速因子', format_af_value(af_result.get('af_total'))])
 
     af_result_table = Table(af_result_data, colWidths=[4*inch, 3.5*inch])
     af_result_table.setStyle(TableStyle([
@@ -525,24 +534,35 @@ def generate_reliability_report(data, output_file):
     )
 
     # 處理結論格式（支持 HTML 標籤）
+    # 調試：保存原始結論到文件
+    try:
+        with open('debug_conclusion_original.txt', 'w', encoding='utf-8') as f:
+            f.write(conclusion)
+    except:
+        pass
+
     # 替換特殊符號避免亂碼
     conclusion = conclusion.replace('⚠️', '[!]').replace('✓', '[✓]').replace('✗', '[✗]')
 
     # 轉換 HTML 標籤為 reportlab 格式
-    # 處理 <strong class="text-warning"> -> <font color="orange"><b>
+    # 處理 <strong class="text-warning"> -> <font color="#f59e0b"><b>
     conclusion = re.sub(r'<strong class="text-warning">(.*?)</strong>',
-                       r'<font color="#f59e0b"><b>\1</b></font>', conclusion)
+                       r'<font color="#f59e0b"><b>\1</b></font>', conclusion, flags=re.DOTALL)
 
-    # 處理 <strong class="text-danger"> -> <font color="red"><b>
+    # 處理 <strong class="text-danger"> -> <font color="#dc2626"><b>
     conclusion = re.sub(r'<strong class="text-danger">(.*?)</strong>',
-                       r'<font color="#dc2626"><b>\1</b></font>', conclusion)
+                       r'<font color="#dc2626"><b>\1</b></font>', conclusion, flags=re.DOTALL)
 
-    # 處理 <strong class="text-success"> -> <font color="green"><b>
+    # 處理 <strong class="text-success"> -> <font color="#10b981"><b>
     conclusion = re.sub(r'<strong class="text-success">(.*?)</strong>',
-                       r'<font color="#10b981"><b>\1</b></font>', conclusion)
+                       r'<font color="#10b981"><b>\1</b></font>', conclusion, flags=re.DOTALL)
+
+    # 處理 <strong class="text-info"> -> <font color="#0ea5e9"><b>
+    conclusion = re.sub(r'<strong class="text-info">(.*?)</strong>',
+                       r'<font color="#0ea5e9"><b>\1</b></font>', conclusion, flags=re.DOTALL)
 
     # 處理 <strong> -> <b>
-    conclusion = re.sub(r'<strong>(.*?)</strong>', r'<b>\1</b>', conclusion)
+    conclusion = re.sub(r'<strong>(.*?)</strong>', r'<b>\1</b>', conclusion, flags=re.DOTALL)
 
     # 處理 <br><br> 和 <br> -> 分段標記
     conclusion = conclusion.replace('<br><br>', '|||PARA|||')
@@ -554,10 +574,17 @@ def generate_reliability_report(data, output_file):
     conclusion = conclusion.replace('</ul>', '')
 
     # 處理 <li> -> 項目符號
-    conclusion = re.sub(r'<li>(.*?)</li>', r'• \1<br/>', conclusion)
+    conclusion = re.sub(r'<li>(.*?)</li>', r'• \1<br/>', conclusion, flags=re.DOTALL)
 
     # 移除其他 class 屬性
     conclusion = re.sub(r' class="[^"]*"', '', conclusion)
+
+    # 調試：保存轉換後的結論到文件
+    try:
+        with open('debug_conclusion_converted.txt', 'w', encoding='utf-8') as f:
+            f.write(conclusion)
+    except:
+        pass
 
     # 分段處理
     paragraphs = conclusion.split('|||PARA|||')

@@ -71,8 +71,8 @@ def parse_html_to_runs(paragraph, html_text):
 
     for part_idx, part in enumerate(parts):
         if part_idx > 0:
-            # 添加段落分隔
-            paragraph.add_run('\n')
+            # 添加兩個換行符表示段落分隔
+            paragraph.add_run('\n\n')
 
         # 使用正則表達式解析 HTML 標籤
         # 匹配 <font color="#xxx"><b>text</b></font>
@@ -84,7 +84,7 @@ def parse_html_to_runs(paragraph, html_text):
             if match.start() > last_end:
                 plain_text = part[last_end:match.start()]
                 # 處理純 <b> 標籤
-                plain_text = process_simple_tags(paragraph, plain_text)
+                process_simple_tags_in_paragraph(paragraph, plain_text)
 
             # 添加帶顏色和粗體的文字
             color = match.group(1)
@@ -96,11 +96,17 @@ def parse_html_to_runs(paragraph, html_text):
         # 添加剩餘的普通文字
         if last_end < len(part):
             remaining = part[last_end:]
-            process_simple_tags(paragraph, remaining)
+            process_simple_tags_in_paragraph(paragraph, remaining)
 
 
-def process_simple_tags(paragraph, text):
+def process_simple_tags_in_paragraph(paragraph, text):
     """處理簡單的 HTML 標籤 (b, br, 項目符號等)"""
+    # 移除所有未處理的 HTML 標籤 (div, span 等)
+    text = re.sub(r'<div[^>]*>', '', text)
+    text = re.sub(r'</div>', '', text)
+    text = re.sub(r'<span[^>]*>', '', text)
+    text = re.sub(r'</span>', '', text)
+
     # 處理 <b> 標籤
     parts = re.split(r'<b>(.*?)</b>', text, flags=re.DOTALL)
     for i, part in enumerate(parts):
@@ -109,13 +115,15 @@ def process_simple_tags(paragraph, text):
             part = re.sub(r'<br\s*/?>', '\n', part)
             # 處理項目符號
             part = re.sub(r'•\s*', '• ', part)
-            if part:
+            # 清理空白但保留內容
+            if part.strip():
                 paragraph.add_run(part)
         else:
             # 粗體文字
             part = re.sub(r'<br\s*/?>', '\n', part)
-            run = paragraph.add_run(part)
-            run.bold = True
+            if part.strip():
+                run = paragraph.add_run(part)
+                run.bold = True
 
 
 def generate_word_report(data, output_file):
@@ -374,44 +382,56 @@ def generate_word_report(data, output_file):
             zf_table.rows[i].cells[1].text = str(value)
 
     # === 第5節：圖表 (如果有) ===
-    if CHARTS_AVAILABLE and data.get('results', {}).get('weibull_result', {}).get('plot_data'):
-        doc.add_page_break()
-        heading = doc.add_heading('5. 分析圖表', level=1)
-        heading.runs[0].font.color.rgb = RGBColor(26, 84, 144)
-
+    charts_added = False
+    if CHARTS_AVAILABLE:
         try:
+            # 嘗試生成圖表
             charts = generate_all_charts(data)
 
-            # 添加圖表
-            for i, (chart_name, chart_base64) in enumerate(charts.items(), start=1):
-                if chart_base64:
-                    # 解碼 base64 圖片
-                    img_data = base64.b64decode(chart_base64.split(',')[1] if ',' in chart_base64 else chart_base64)
-                    img_stream = io.BytesIO(img_data)
+            # 檢查是否有有效的圖表
+            valid_charts = {k: v for k, v in charts.items() if v}
 
-                    # 添加圖表標題
-                    chart_titles = {
-                        'weibull_plot': 'Weibull 機率圖',
-                        'reliability_curve': '可靠度曲線',
-                        'hazard_rate': '失效率曲線'
-                    }
+            if valid_charts:
+                doc.add_page_break()
+                heading = doc.add_heading('5. 分析圖表', level=1)
+                heading.runs[0].font.color.rgb = RGBColor(26, 84, 144)
 
-                    doc.add_heading(f'5.{i} {chart_titles.get(chart_name, chart_name)}', level=2)
+                # 添加圖表
+                for i, (chart_name, chart_base64) in enumerate(valid_charts.items(), start=1):
+                    try:
+                        # 解碼 base64 圖片
+                        img_data = base64.b64decode(chart_base64.split(',')[1] if ',' in chart_base64 else chart_base64)
+                        img_stream = io.BytesIO(img_data)
 
-                    # 插入圖片
-                    doc.add_picture(img_stream, width=Inches(6))
+                        # 添加圖表標題
+                        chart_titles = {
+                            'weibull_plot': 'Weibull 機率圖',
+                            'reliability_curve': '可靠度曲線',
+                            'hazard_rate': '失效率曲線'
+                        }
 
-                    # 置中
-                    last_paragraph = doc.paragraphs[-1]
-                    last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                        doc.add_heading(f'5.{i} {chart_titles.get(chart_name, chart_name)}', level=2)
 
-                    doc.add_paragraph()
+                        # 插入圖片
+                        doc.add_picture(img_stream, width=Inches(6))
+
+                        # 置中
+                        last_paragraph = doc.paragraphs[-1]
+                        last_paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+
+                        doc.add_paragraph()
+                        charts_added = True
+                    except Exception as e:
+                        print(f"Error adding chart {chart_name}: {e}")
+
         except Exception as e:
-            print(f"Error adding charts to Word: {e}")
+            print(f"Error generating charts for Word: {e}")
+            import traceback
+            traceback.print_exc()
 
-    # === 第6節：結論 ===
+    # === 結論節 ===
     doc.add_page_break()
-    section_num = 6 if CHARTS_AVAILABLE else 5
+    section_num = 6 if charts_added else 5
     heading = doc.add_heading(f'{section_num}. 測試結論', level=1)
     heading.runs[0].font.color.rgb = RGBColor(26, 84, 144)
 

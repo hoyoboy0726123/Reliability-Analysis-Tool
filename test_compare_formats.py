@@ -1,7 +1,8 @@
 """
-測試 Word 報告生成 V2 - 完全匹配 PDF 格式
+比較 PDF 和 Word 報告格式
 """
-from word_generator_v2 import generate_report_from_request_v2 as generate_report_from_request
+from word_generator_v2 import generate_report_from_request_v2
+from report_generator import generate_report_from_request as generate_pdf
 
 # 模擬完整的測試數據
 test_data = {
@@ -72,24 +73,38 @@ test_data = {
             '''
 }
 
-print("Testing Word report generation...")
+print("Generating PDF and Word reports for comparison...")
 print("=" * 80)
 
 try:
-    word_buffer = generate_report_from_request(test_data)
+    # 生成 PDF
+    print("\n[1/2] Generating PDF report...")
+    pdf_buffer = generate_pdf(test_data)
+    with open('test_compare_report.pdf', 'wb') as f:
+        f.write(pdf_buffer.read())
+    print("[OK] PDF generated: test_compare_report.pdf")
 
-    # 保存測試 Word 文件
-    with open('test_report.docx', 'wb') as f:
+    # 生成 Word
+    print("\n[2/2] Generating Word report (V2)...")
+    word_buffer = generate_report_from_request_v2(test_data)
+    with open('test_compare_report.docx', 'wb') as f:
         f.write(word_buffer.read())
+    print("[OK] Word generated: test_compare_report.docx")
 
     print("\n" + "=" * 80)
-    print("[SUCCESS] Word file generated: test_report.docx")
-    print("Please open the file and check:")
-    print("  1. Section 5: Charts (should have 3 charts)")
-    print("  2. Section 6: Conclusion (should be formatted with colors and bullets)")
+    print("[SUCCESS] Both reports generated successfully!")
+    print("\nPlease compare the following files:")
+    print("  1. test_compare_report.pdf")
+    print("  2. test_compare_report.docx")
+    print("\nVerify that the formats are COMPLETELY CONSISTENT:")
+    print("  [OK] Section titles and numbering")
+    print("  [OK] Table structures (columns, headers, colors)")
+    print("  [OK] Data presentation order")
+    print("  [OK] Chart titles and layouts")
+    print("  [OK] Conclusion formatting (colors, bold, bullets)")
     print("=" * 80)
 
 except Exception as e:
-    print(f"\n[ERROR] Failed to generate Word file: {e}")
+    print(f"\n[ERROR] Failed to generate reports: {e}")
     import traceback
     traceback.print_exc()

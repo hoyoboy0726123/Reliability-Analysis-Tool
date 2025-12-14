@@ -467,9 +467,9 @@ def generate_report():
 
         # 根據格式生成報告
         if report_format == 'word':
-            # 生成 Word 文件
-            from word_generator import generate_report_from_request as generate_word
-            print("Calling Word generator...")
+            # 生成 Word 文件 (使用 V2 版本以匹配 PDF 格式)
+            from word_generator_v2 import generate_report_from_request_v2 as generate_word
+            print("Calling Word generator V2 (PDF format match)...")
             report_buffer = generate_word(data)
             print("Word buffer generated successfully")
 

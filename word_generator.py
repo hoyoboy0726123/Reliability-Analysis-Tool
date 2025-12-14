@@ -192,44 +192,133 @@ def generate_word_report(data, output_file):
     doc.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), 'Microsoft JhengHei')
 
     # === 封面頁 ===
-    # 標題
-    title = doc.add_heading('可靠度測試報告', level=0)
+    # 添加空白以置中內容
+    for _ in range(8):
+        doc.add_paragraph()
+
+    # 大標題 (與 PDF 一致)
+    title = doc.add_paragraph('RELIABILITY TEST REPORT')
     title.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    title.runs[0].font.size = Pt(28)
-    title.runs[0].font.color.rgb = RGBColor(26, 84, 144)  # 藍色
+    title.runs[0].font.size = Pt(32)
+    title.runs[0].font.color.rgb = RGBColor(26, 84, 144)
+    title.runs[0].font.bold = True
 
-    doc.add_paragraph()  # 空行
+    doc.add_paragraph()
 
-    # 副標題
-    subtitle = doc.add_paragraph('Reliability Test Report')
+    # 副標題 (與 PDF 一致)
+    subtitle = doc.add_paragraph('可靠度測試報告')
     subtitle.alignment = WD_ALIGN_PARAGRAPH.CENTER
-    subtitle.runs[0].font.size = Pt(16)
-    subtitle.runs[0].font.color.rgb = RGBColor(100, 100, 100)
+    subtitle.runs[0].font.size = Pt(24)
+    subtitle.runs[0].font.color.rgb = RGBColor(55, 65, 81)
 
-    doc.add_paragraph()
-    doc.add_paragraph()
+    for _ in range(4):
+        doc.add_paragraph()
 
-    # 報告信息
-    info_table = doc.add_table(rows=3, cols=2)
-    info_table.style = 'Light List Accent 1'
+    # 封面資訊表格 (與 PDF 一致)
+    cover_table = doc.add_table(rows=5, cols=2)
+    cover_table.alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-    info_data = [
-        ('報告日期', datetime.now().strftime('%Y-%m-%d')),
-        ('報告時間', datetime.now().strftime('%H:%M:%S')),
-        ('分析模式', '韋伯分析' if data.get('analysis_mode') == 'weibull' else '零失效分析')
+    analysis_mode = data.get('analysis_mode', 'N/A').upper()
+    if analysis_mode == 'WEIBULL':
+        analysis_mode = 'WEIBULL'
+    elif analysis_mode == 'ZERO_FAILURE':
+        analysis_mode = 'ZERO_FAILURE'
+
+    cover_data = [
+        ('Report Date / 報告日期', datetime.now().strftime('%Y-%m-%d')),
+        ('Analysis Mode / 分析模式', analysis_mode),
+        ('', ''),
+        ('Prepared by / 報告產生', 'Reliability Analysis Tool'),
+        ('', 'AFR/MTBF Analysis System')
     ]
 
-    for i, (label, value) in enumerate(info_data):
-        info_table.rows[i].cells[0].text = label
-        info_table.rows[i].cells[0].paragraphs[0].runs[0].bold = True
-        info_table.rows[i].cells[1].text = value
+    for i, (label, value) in enumerate(cover_data):
+        cells = cover_table.rows[i].cells
+        cells[0].text = label
+        cells[1].text = value
+
+        # 設置字體和對齊
+        for cell in cells:
+            for paragraph in cell.paragraphs:
+                paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
+                for run in paragraph.runs:
+                    run.font.name = 'Microsoft JhengHei'
+                    run.font.size = Pt(12)
+
+        # 設置背景顏色
+        set_cell_background(cells[0], 'f9fafb')
+        set_cell_background(cells[1], 'f9fafb')
+
+    # 設置表格邊框為藍色
+    from docx.oxml import OxmlElement
+    tbl = cover_table._element
+    tblPr = tbl.tblPr
+    tblBorders = OxmlElement('w:tblBorders')
+    for border_name in ['top', 'left', 'bottom', 'right', 'insideH', 'insideV']:
+        border = OxmlElement(f'w:{border_name}')
+        border.set(qn('w:val'), 'single')
+        border.set(qn('w:sz'), '18')  # 1.5pt
+        border.set(qn('w:color'), '2563eb')  # 藍色
+        tblBorders.append(border)
+    tblPr.append(tblBorders)
 
     # 分頁
     doc.add_page_break()
 
-    # === 第1節：加速因子計算 ===
-    heading = doc.add_heading('1. 加速因子計算結果', level=1)
-    heading.runs[0].font.color.rgb = RGBColor(26, 84, 144)
+    # === 第1頁：REPORT SUMMARY (與 PDF 一致) ===
+    summary_title = doc.add_heading('REPORT SUMMARY / 報告摘要', level=0)
+    summary_title.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    summary_title.runs[0].font.size = Pt(24)
+    summary_title.runs[0].font.color.rgb = RGBColor(26, 84, 144)
+
+    doc.add_paragraph()
+
+    # 報告資訊表格 (與 PDF 一致)
+    test_data = data.get('test_data', {})
+    summary_table = doc.add_table(rows=4, cols=2)
+
+    summary_data = [
+        ('Report Date / 報告日期:', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
+        ('Analysis Mode / 分析模式:', data.get('analysis_mode', 'N/A').upper()),
+        ('Test Duration / 測試時長:', f"{test_data.get('t_test', 'N/A')} hours"),
+        ('Mission Time / 任務時間:', f"{test_data.get('mission_years', 'N/A')} years")
+    ]
+
+    for i, (label, value) in enumerate(summary_data):
+        cells = summary_table.rows[i].cells
+        cells[0].text = label
+        cells[1].text = value
+
+        # 設置背景顏色
+        set_cell_background(cells[0], 'f3f4f6')
+        set_cell_background(cells[1], 'f3f4f6')
+
+        # 設置字體
+        for cell in cells:
+            for paragraph in cell.paragraphs:
+                for run in paragraph.runs:
+                    run.font.name = 'Microsoft JhengHei'
+                    run.font.size = Pt(10)
+
+    # 設置表格邊框
+    tbl = summary_table._element
+    tblPr = tbl.tblPr
+    tblBorders = OxmlElement('w:tblBorders')
+    for border_name in ['top', 'left', 'bottom', 'right', 'insideH', 'insideV']:
+        border = OxmlElement(f'w:{border_name}')
+        border.set(qn('w:val'), 'single')
+        border.set(qn('w:sz'), '6')
+        border.set(qn('w:color'), 'd1d5db')
+        tblBorders.append(border)
+    tblPr.append(tblBorders)
+
+    doc.add_paragraph()
+    doc.add_paragraph()
+
+    # === 第1節：加速因子參數 (與 PDF 一致) ===
+    heading = doc.add_heading('1. Acceleration Factor Parameters / 加速因子參數', level=1)
+    heading.runs[0].font.size = Pt(16)
+    heading.runs[0].font.color.rgb = RGBColor(37, 99, 235)
 
     af_result = data.get('results', {}).get('af_result', {})
 

@@ -591,7 +591,17 @@ def generate_word_report_v2(data, output_file):
         analysis_mode = data.get('analysis_mode', 'weibull')
         weibull_result = data.get('results', {}).get('weibull_result')
 
-        if weibull_result:
+        # 檢查是否應該生成圖表 (Weibull 模式或零失效模式都應該生成)
+        should_generate_charts = False
+
+        if analysis_mode == 'weibull' and weibull_result and weibull_result.get('plot_data'):
+            # Weibull 模式：需要 weibull_result 和 plot_data
+            should_generate_charts = True
+        elif analysis_mode == 'zero_failure' and reliability_result:
+            # 零失效模式：需要 reliability_result
+            should_generate_charts = True
+
+        if should_generate_charts:
             charts = generate_all_charts(
                 analysis_mode=analysis_mode,
                 weibull_result=weibull_result if analysis_mode == 'weibull' else None,

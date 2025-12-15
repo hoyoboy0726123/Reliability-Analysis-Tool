@@ -177,7 +177,8 @@ def generate_word_report_v2(data, output_file):
     doc.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), 'Microsoft JhengHei')
 
     # ========== 封面页 ==========
-    for _ in range(8):
+    # 只添加少量空行，讓標題從頂部開始
+    for _ in range(2):
         doc.add_paragraph()
 
     title = doc.add_paragraph('RELIABILITY TEST REPORT')
@@ -193,7 +194,8 @@ def generate_word_report_v2(data, output_file):
     subtitle.runs[0].font.size = Pt(24)
     subtitle.runs[0].font.color.rgb = RGBColor(55, 65, 81)
 
-    for _ in range(4):
+    # 減少空行以節省空間
+    for _ in range(2):
         doc.add_paragraph()
 
     # 封面资讯表格

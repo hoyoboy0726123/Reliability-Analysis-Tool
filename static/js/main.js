@@ -325,7 +325,7 @@ function generateConclusion(data, hasFailures) {
     const af_total = data.af_result.af_total || 1;
     const equivalent_hours = t_test * af_total;
     const equivalent_years = (equivalent_hours / 8760).toFixed(2);
-    const equivalent_field_time = `${equivalent_hours.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} hrs ~ ${equivalent_years} years`;
+    const equivalent_field_time = `${equivalent_hours.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} hrs ~ <strong class="text-success">${equivalent_years} years</strong>`;
 
     let conclusionHTML = "";
 

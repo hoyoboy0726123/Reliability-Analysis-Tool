@@ -108,6 +108,10 @@ def parse_html_conclusion(doc, html_text):
 
 def parse_paragraph_content(paragraph, html_text):
     """解析段落内容"""
+    # 修復可能的標籤閉合順序錯誤
+    html_text = re.sub(r'</font></b>', '</b></font>', html_text)
+    html_text = re.sub(r'<b></font>', '</font><b>', html_text)
+
     # 匹配模式（按优先级排序）
     pattern_colored_bold = r'<font color="([^"]+)"><b>(.*?)</b></font>'
     pattern_font = r'<font[^>]*size="(\d+)"[^>]*color="([^"]+)"[^>]*>(.*?)</font>'

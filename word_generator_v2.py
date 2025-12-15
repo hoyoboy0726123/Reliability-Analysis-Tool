@@ -79,6 +79,9 @@ def parse_html_conclusion(doc, html_text):
     html_text = html_text.replace('<br><br>', '|||PARA|||').replace('<br>', '<br/>')
     html_text = html_text.replace('<ul class="mb-0 mt-2">', '').replace('<ul>', '').replace('</ul>', '')
     html_text = re.sub(r'<li>(.*?)</li>', r'• \1<br/>', html_text, flags=re.DOTALL)
+
+    # 先处理带 class 的 div 标签，再移除 class 属性
+    html_text = html_text.replace('<div class="small text-muted mt-2">', '<font size="9" color="#6b7280">')
     html_text = re.sub(r' class="[^"]*"', '', html_text)
 
     paragraphs = html_text.split('|||PARA|||')
@@ -88,8 +91,10 @@ def parse_html_conclusion(doc, html_text):
         if not para:
             continue
 
+        # 移除空白的 div 标签
         para = re.sub(r'<div[^>]*>\s*</div>', '', para)
-        para = para.replace('<div class="small text-muted mt-2">', '<font size="9" color="#6b7280">')
+        # 处理剩余的 div 标签（转换为 font 或直接移除）
+        para = para.replace('<div>', '<font size="9" color="#6b7280">')
         para = para.replace('</div>', '</font>')
 
         try:
@@ -103,53 +108,62 @@ def parse_html_conclusion(doc, html_text):
 
 def parse_paragraph_content(paragraph, html_text):
     """解析段落内容"""
+    # 匹配模式（按优先级排序）
     pattern_colored_bold = r'<font color="([^"]+)"><b>(.*?)</b></font>'
+    pattern_font = r'<font[^>]*size="(\d+)"[^>]*color="([^"]+)"[^>]*>(.*?)</font>'
     pattern_bold = r'<b>(.*?)</b>'
+
     html_text = html_text.replace('<br/>', '\n')
 
     pos = 0
     while pos < len(html_text):
-        match_colored = re.search(pattern_colored_bold, html_text[pos:], re.DOTALL)
+        # 查找所有可能的匹配
+        match_colored_bold = re.search(pattern_colored_bold, html_text[pos:], re.DOTALL)
+        match_font = re.search(pattern_font, html_text[pos:], re.DOTALL)
         match_bold = re.search(pattern_bold, html_text[pos:], re.DOTALL)
 
-        next_match = None
-        match_type = None
+        # 找出最近的匹配
+        matches = []
+        if match_colored_bold:
+            matches.append(('colored_bold', match_colored_bold))
+        if match_font:
+            matches.append(('font', match_font))
+        if match_bold:
+            matches.append(('bold', match_bold))
 
-        if match_colored and match_bold:
-            if match_colored.start() < match_bold.start():
-                next_match = match_colored
-                match_type = 'colored'
-            else:
-                next_match = match_bold
-                match_type = 'bold'
-        elif match_colored:
-            next_match = match_colored
-            match_type = 'colored'
-        elif match_bold:
-            next_match = match_bold
-            match_type = 'bold'
-
-        if next_match:
-            if next_match.start() > 0:
-                plain_text = html_text[pos:pos + next_match.start()]
-                if plain_text:
-                    paragraph.add_run(plain_text)
-
-            if match_type == 'colored':
-                color = next_match.group(1)
-                text = next_match.group(2)
-                add_colored_text(paragraph, text, color=color, bold=True)
-            else:
-                text = next_match.group(1)
-                run = paragraph.add_run(text)
-                run.bold = True
-
-            pos = pos + next_match.end()
-        else:
+        if not matches:
+            # 没有更多标签，添加剩余文字
             remaining = html_text[pos:]
             if remaining:
                 paragraph.add_run(remaining)
             break
+
+        # 选择最近的匹配
+        matches.sort(key=lambda x: x[1].start())
+        match_type, next_match = matches[0]
+
+        # 添加匹配前的普通文字
+        if next_match.start() > 0:
+            plain_text = html_text[pos:pos + next_match.start()]
+            if plain_text:
+                paragraph.add_run(plain_text)
+
+        # 根据类型处理匹配
+        if match_type == 'colored_bold':
+            color = next_match.group(1)
+            text = next_match.group(2)
+            add_colored_text(paragraph, text, color=color, bold=True)
+        elif match_type == 'font':
+            size = int(next_match.group(1))
+            color = next_match.group(2)
+            text = next_match.group(3)
+            add_colored_text(paragraph, text, color=color, bold=False, size=size)
+        else:  # bold
+            text = next_match.group(1)
+            run = paragraph.add_run(text)
+            run.bold = True
+
+        pos = pos + next_match.end()
 
 
 def generate_word_report_v2(data, output_file):

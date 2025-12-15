@@ -184,6 +184,11 @@ def generate_word_report_v2(data, output_file):
 
     # 封面资讯表格
     cover_table = doc.add_table(rows=5, cols=2)
+
+    # 设置列宽（匹配 PDF: 3", 3"）
+    cover_table.columns[0].width = Inches(3.0)
+    cover_table.columns[1].width = Inches(3.0)
+
     analysis_mode = data.get('analysis_mode', 'N/A').upper()
 
     cover_data = [
@@ -198,6 +203,10 @@ def generate_word_report_v2(data, output_file):
         cells = cover_table.rows[i].cells
         cells[0].text = label
         cells[1].text = value
+
+        # 设置单元格宽度
+        cells[0].width = cover_table.columns[0].width
+        cells[1].width = cover_table.columns[1].width
 
         for cell in cells:
             for paragraph in cell.paragraphs:
@@ -224,6 +233,10 @@ def generate_word_report_v2(data, output_file):
     test_data = data.get('test_data', {})
     summary_table = doc.add_table(rows=4, cols=2)
 
+    # 设置列宽（匹配 PDF: 2.5", 4"）
+    summary_table.columns[0].width = Inches(2.5)
+    summary_table.columns[1].width = Inches(4.0)
+
     summary_data = [
         ('Report Date / 報告日期:', datetime.now().strftime('%Y-%m-%d %H:%M:%S')),
         ('Analysis Mode / 分析模式:', data.get('analysis_mode', 'N/A').upper()),
@@ -235,6 +248,10 @@ def generate_word_report_v2(data, output_file):
         cells = summary_table.rows[i].cells
         cells[0].text = label
         cells[1].text = value
+
+        # 设置单元格宽度
+        cells[0].width = summary_table.columns[0].width
+        cells[1].width = summary_table.columns[1].width
 
         set_cell_background(cells[0], 'f3f4f6')
         set_cell_background(cells[1], 'f3f4f6')
@@ -308,10 +325,19 @@ def generate_word_report_v2(data, output_file):
     # 创建表格
     af_param_table = doc.add_table(rows=len(af_param_table_data), cols=4)
 
+    # 设置列宽（匹配 PDF: 1.5", 1.8", 1.8", 2.4"）
+    af_param_table.columns[0].width = Inches(1.5)
+    af_param_table.columns[1].width = Inches(1.8)
+    af_param_table.columns[2].width = Inches(1.8)
+    af_param_table.columns[3].width = Inches(2.4)
+
     for i, row_data in enumerate(af_param_table_data):
         cells = af_param_table.rows[i].cells
         for j, value in enumerate(row_data):
             cells[j].text = value
+
+            # 设置单元格自动换行
+            cells[j].width = af_param_table.columns[j].width
 
             if i == 0:  # 表头
                 set_cell_background(cells[j], '2563eb')
@@ -351,10 +377,17 @@ def generate_word_report_v2(data, output_file):
 
     af_result_table = doc.add_table(rows=len(af_result_table_data), cols=2)
 
+    # 设置列宽（匹配 PDF: 4", 3.5"）
+    af_result_table.columns[0].width = Inches(4.0)
+    af_result_table.columns[1].width = Inches(3.5)
+
     for i, row_data in enumerate(af_result_table_data):
         cells = af_result_table.rows[i].cells
         for j, value in enumerate(row_data):
             cells[j].text = value
+
+            # 设置单元格自动换行
+            cells[j].width = af_result_table.columns[j].width
 
             if i == 0:  # 表头
                 set_cell_background(cells[j], '2563eb')
@@ -392,10 +425,18 @@ def generate_word_report_v2(data, output_file):
 
     test_table = doc.add_table(rows=len(test_table_data), cols=2)
 
+    # 设置列宽（匹配 PDF: 3", 4.5"）
+    test_table.columns[0].width = Inches(3.0)
+    test_table.columns[1].width = Inches(4.5)
+
     for i, row_data in enumerate(test_table_data):
         cells = test_table.rows[i].cells
         cells[0].text = row_data[0]
         cells[1].text = str(row_data[1])
+
+        # 设置单元格自动换行
+        cells[0].width = test_table.columns[0].width
+        cells[1].width = test_table.columns[1].width
 
         set_cell_background(cells[0], 'f3f4f6')
         set_cell_background(cells[1], 'f3f4f6')
@@ -442,10 +483,18 @@ def generate_word_report_v2(data, output_file):
 
         weibull_table = doc.add_table(rows=len(weibull_table_data), cols=2)
 
+        # 设置列宽（匹配 PDF: 4", 3.5"）
+        weibull_table.columns[0].width = Inches(4.0)
+        weibull_table.columns[1].width = Inches(3.5)
+
         for i, row_data in enumerate(weibull_table_data):
             cells = weibull_table.rows[i].cells
             cells[0].text = row_data[0]
             cells[1].text = row_data[1]
+
+            # 设置单元格宽度
+            cells[0].width = weibull_table.columns[0].width
+            cells[1].width = weibull_table.columns[1].width
 
             if i == 0:
                 set_cell_background(cells[0], '10b981')
@@ -486,10 +535,18 @@ def generate_word_report_v2(data, output_file):
 
         zf_table = doc.add_table(rows=len(zf_table_data), cols=2)
 
+        # 设置列宽（匹配 PDF: 4", 3.5"）
+        zf_table.columns[0].width = Inches(4.0)
+        zf_table.columns[1].width = Inches(3.5)
+
         for i, row_data in enumerate(zf_table_data):
             cells = zf_table.rows[i].cells
             cells[0].text = row_data[0]
             cells[1].text = row_data[1]
+
+            # 设置单元格宽度
+            cells[0].width = zf_table.columns[0].width
+            cells[1].width = zf_table.columns[1].width
 
             if i == 0:
                 set_cell_background(cells[0], '10b981')

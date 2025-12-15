@@ -320,6 +320,13 @@ function generateConclusion(data, hasFailures) {
     const rh_use = document.getElementById('rh_use').value;
     const mission_years = parseFloat(document.getElementById('mission_years').value) || 2;
 
+    // 計算等效現場時間 (Equivalent Field Time)
+    const t_test = parseFloat(document.getElementById('t_test').value) || 0;
+    const af_total = data.af_result.af_total || 1;
+    const equivalent_hours = t_test * af_total;
+    const equivalent_years = (equivalent_hours / 8760).toFixed(2);
+    const equivalent_field_time = `${equivalent_hours.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})} hrs ~ ${equivalent_years} years`;
+
     let conclusionHTML = "";
 
     if (hasFailures && data.weibull_result && !data.weibull_result.error) {
@@ -346,7 +353,9 @@ function generateConclusion(data, hasFailures) {
         if (parseFloat(bx_years) >= mission_years) {
             // 正面結論：Bx% 壽命 ≥ 任務時間
             conclusionHTML = `
-                我們的測試模擬了現場使用壽命。計算結果顯示，這批樣品的 <strong>B${bx_percent}% 壽命</strong>（${bx_description}）為 <strong>${bx_years} 年</strong> (${Math.round(res.bx_life).toLocaleString()} 小時)。
+                我們進行了 <strong>${t_test.toLocaleString()} 小時</strong>的加速測試，相當於 <strong>${equivalent_field_time}</strong> 的現場使用壽命。
+                <br><br>
+                計算結果顯示，這批樣品的 <strong>B${bx_percent}% 壽命</strong>（${bx_description}）為 <strong>${bx_years} 年</strong> (${Math.round(res.bx_life).toLocaleString()} 小時)。
                 <br><br>
                 在 <strong>${mission_years} 年</strong>的任務期間內，預期可靠度為 <strong>${reliability_pct}%</strong>。
                 這個數值證明了即使有 <strong>${n_failures}</strong> 個樣品失效，產品的整體可靠性邊際仍然充足。
@@ -358,7 +367,9 @@ function generateConclusion(data, hasFailures) {
             conclusionHTML = `
                 <strong class="text-warning">⚠️ 警告：可靠性不足</strong>
                 <br><br>
-                我們的測試模擬了現場使用壽命。計算結果顯示，這批樣品的 <strong>B${bx_percent}% 壽命</strong>僅為 <strong>${bx_years} 年</strong> (${Math.round(res.bx_life).toLocaleString()} 小時)，
+                我們進行了 <strong>${t_test.toLocaleString()} 小時</strong>的加速測試，相當於 <strong>${equivalent_field_time}</strong> 的現場使用壽命。
+                <br><br>
+                計算結果顯示，這批樣品的 <strong>B${bx_percent}% 壽命</strong>僅為 <strong>${bx_years} 年</strong> (${Math.round(res.bx_life).toLocaleString()} 小時)，
                 <strong class="text-danger">未達到 ${mission_years} 年的任務時間要求</strong>。
                 <br><br>
                 在 ${mission_years} 年任務期間內，預期可靠度僅為 <strong>${reliability_pct}%</strong>，失效風險高達 <strong class="text-danger">${failure_risk_pct}%</strong>。
@@ -408,9 +419,9 @@ function generateConclusion(data, hasFailures) {
             conclusionHTML = `
                 <strong class="text-success">✓ 優秀：可靠度達標</strong>
                 <br><br>
-                在我們的現場操作條件（<strong>${t_use}°C / ${rh_use}% RH</strong>）下，我們模擬了 <strong>${mission_years} 年</strong>的壽命。
+                我們進行了 <strong>${t_test.toLocaleString()} 小時</strong>的加速測試，相當於 <strong>${equivalent_field_time}</strong> 的現場使用壽命（操作條件：<strong>${t_use}°C / ${rh_use}% RH</strong>）。
                 <br><br>
-                我們的測試結果顯示，在 ${mission_years} 年任務期間內，這些樣品預計的失效率上限僅為 <strong>${failure_rate_pct}%</strong>
+                測試結果顯示，在 ${mission_years} 年任務期間內，這些樣品預計的失效率上限僅為 <strong>${failure_rate_pct}%</strong>
                 (即可靠度為 <strong class="text-success">${reliability_pct}%</strong>)，<strong>優於業界平均標準 ${standardInfo.avgRate}</strong>。
                 <br><br>
                 這表明元件在整個產品保固期內，因內在老化機制導致失效的風險<strong>極低</strong>，可安心提供 ${mission_years} 年保固。
@@ -422,9 +433,9 @@ function generateConclusion(data, hasFailures) {
             conclusionHTML = `
                 <strong class="text-info">✓ 合格：可靠度可接受</strong>
                 <br><br>
-                在我們的現場操作條件（<strong>${t_use}°C / ${rh_use}% RH</strong>）下，我們模擬了 <strong>${mission_years} 年</strong>的壽命。
+                我們進行了 <strong>${t_test.toLocaleString()} 小時</strong>的加速測試，相當於 <strong>${equivalent_field_time}</strong> 的現場使用壽命（操作條件：<strong>${t_use}°C / ${rh_use}% RH</strong>）。
                 <br><br>
-                我們的測試結果顯示，在 ${mission_years} 年任務期間內，這些樣品預計的失效率上限為 <strong>${failure_rate_pct}%</strong>
+                測試結果顯示，在 ${mission_years} 年任務期間內，這些樣品預計的失效率上限為 <strong>${failure_rate_pct}%</strong>
                 (即可靠度為 ${reliability_pct}%)，<strong>符合業界可接受範圍</strong> (失效率 < ${standardInfo.maxRate})。
                 <br><br>
                 產品可靠度在可接受範圍內，建議持續監控失效率並優化製程以達到業界平均水準 (${standardInfo.avgRate})。
@@ -436,9 +447,9 @@ function generateConclusion(data, hasFailures) {
             conclusionHTML = `
                 <strong class="text-warning">⚠️ 警告：可靠度不足</strong>
                 <br><br>
-                在我們的現場操作條件（<strong>${t_use}°C / ${rh_use}% RH</strong>）下，我們模擬了 <strong>${mission_years} 年</strong>的壽命。
+                我們進行了 <strong>${t_test.toLocaleString()} 小時</strong>的加速測試，相當於 <strong>${equivalent_field_time}</strong> 的現場使用壽命（操作條件：<strong>${t_use}°C / ${rh_use}% RH</strong>）。
                 <br><br>
-                我們的測試結果顯示，在 ${mission_years} 年任務期間內，這些樣品預計的失效率上限為 <strong class="text-danger">${failure_rate_pct}%</strong>
+                測試結果顯示，在 ${mission_years} 年任務期間內，這些樣品預計的失效率上限為 <strong class="text-danger">${failure_rate_pct}%</strong>
                 (即可靠度僅為 ${reliability_pct}%)，<strong class="text-danger">超過業界可接受上限 ${standardInfo.maxRate}</strong>。
                 <br><br>
                 <strong>建議措施：</strong>

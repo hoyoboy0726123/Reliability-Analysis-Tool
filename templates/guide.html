@@ -2161,7 +2161,7 @@
                 </div>
 
                 <!-- Zero Failure Testing Card -->
-                <div class="col-md-6 col-lg-4 param-card-wrapper" data-category="theory" data-keywords="零失效 zero failure chi-squared 卡方分佈 信心水準 confidence mtbf 下限">
+                <div class="col-md-6 col-lg-4 param-card-wrapper" data-category="theory" data-keywords="零失效 zero failure chi-squared 卡方分佈 信心水準 confidence mtbf 下限 fits 失效率 failure rate lambda">
                     <div class="card param-card glass-panel h-100 border border-warning">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-start mb-3">
@@ -2264,6 +2264,137 @@
                                             → <strong>MTBF<sub>lower</sub> = 2×17,520 / 1.833 = 19,121 小時</strong>
                                             </p>
                                             <p class="small">結論：有 60% 的信心，真實 MTBF ≥ 19,121 小時。</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item bg-transparent">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#zfFITs">
+                                            🔢 FITs 失效率單位
+                                        </button>
+                                    </h2>
+                                    <div id="zfFITs" class="accordion-collapse collapse" data-bs-parent="#zfAccordion">
+                                        <div class="accordion-body">
+                                            <h6 class="text-warning">什麼是 FITs？</h6>
+                                            <p class="small"><strong>FIT</strong> 是 <strong>Failures In Time</strong> 的縮寫，是半導體和電子產品業界常用的失效率單位。</p>
+
+                                            <div class="formula-box">
+                                                <strong>定義：</strong><br>
+                                                1 FIT = 1 次失效 / 10<sup>9</sup> 小時
+                                            </div>
+
+                                            <h6 class="text-warning mt-3">為什麼使用 FITs？</h6>
+                                            <ul class="small">
+                                                <li class="mb-2"><strong>數值友善：</strong>高可靠度產品的失效率極低（如 10<sup>-7</sup> /hr），用 FITs 表示可避免過多小數點</li>
+                                                <li class="mb-2"><strong>業界標準：</strong>半導體業界（Intel, TI, Samsung 等）普遍採用</li>
+                                                <li class="mb-2"><strong>便於比較：</strong>不同產品的可靠度可用整數比較（如 100 FITs vs 500 FITs）</li>
+                                            </ul>
+
+                                            <h6 class="text-warning mt-3">FITs 與 MTBF 的關係</h6>
+                                            <div class="formula-box mb-2">
+                                                λ (失效率) = 1 / MTBF
+                                            </div>
+                                            <div class="formula-box mb-2">
+                                                FITs = λ × 10<sup>9</sup> = (1 / MTBF) × 10<sup>9</sup>
+                                            </div>
+                                            <div class="formula-box">
+                                                MTBF = 10<sup>9</sup> / FITs
+                                            </div>
+
+                                            <h6 class="text-warning mt-3">實例轉換</h6>
+                                            <table class="table table-sm table-dark typical-value-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>MTBF (小時)</th>
+                                                        <th>失效率 (λ)</th>
+                                                        <th>FITs</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>1,000,000</td>
+                                                        <td>1.0 × 10<sup>-6</sup> /hr</td>
+                                                        <td>1,000 FITs</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>10,000,000</td>
+                                                        <td>1.0 × 10<sup>-7</sup> /hr</td>
+                                                        <td>100 FITs</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>100,000,000</td>
+                                                        <td>1.0 × 10<sup>-8</sup> /hr</td>
+                                                        <td>10 FITs</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>1,000,000,000</td>
+                                                        <td>1.0 × 10<sup>-9</sup> /hr</td>
+                                                        <td>1 FIT</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
+
+                                            <h6 class="text-warning mt-3">本工具如何使用 FITs</h6>
+                                            <p class="small">在<strong>零失效分析</strong>中，我們計算：</p>
+                                            <div class="method-step">
+                                                <strong>步驟 1：</strong> 計算 MTBF 下限
+                                                <p class="mb-0 mt-2 small">MTBF<sub>lower</sub> = 2T / χ²<sub>[(1-CL)/n, 2]</sub></p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 2：</strong> 轉換為失效率上限（FITs）
+                                                <p class="mb-0 mt-2 small">λ<sub>upper</sub> (FITs) = (1 / MTBF<sub>lower</sub>) × 10<sup>9</sup></p>
+                                            </div>
+                                            <div class="method-step">
+                                                <strong>步驟 3：</strong> 換算到現場條件
+                                                <p class="mb-0 mt-2 small">λ<sub>use</sub> (FITs) = λ<sub>alt</sub> (FITs) / AF<sub>total</sub></p>
+                                            </div>
+
+                                            <h6 class="text-warning mt-3">實例計算</h6>
+                                            <p class="small">
+                                            • 測試條件 MTBF<sub>lower</sub> = 20,000 小時<br>
+                                            • λ<sub>alt</sub> = (1 / 20,000) × 10<sup>9</sup> = <strong>50,000 FITs</strong><br>
+                                            • 若 AF<sub>total</sub> = 50<br>
+                                            • λ<sub>use</sub> = 50,000 / 50 = <strong>1,000 FITs</strong>
+                                            </p>
+                                            <p class="small">結論：在現場條件下，預期失效率上限為 <strong>1,000 FITs</strong>（即 10 億小時內失效 1,000 次）。</p>
+
+                                            <div class="alert alert-info mt-3">
+                                                <strong>💡 如何解讀 FITs：</strong>
+                                                <p class="mb-0 small">
+                                                • <strong>100 FITs</strong> = 如果有 <strong>114 台設備</strong>運行 <strong>1 年</strong> (8760 hr)，預期會有 <strong>1 台</strong>失效<br>
+                                                • <strong>1,000 FITs</strong> = 如果有 <strong>11 台設備</strong>運行 <strong>1 年</strong>，預期會有 <strong>1 台</strong>失效<br>
+                                                • FITs 越<strong>低</strong>，產品越<strong>可靠</strong>
+                                                </p>
+                                            </div>
+
+                                            <h6 class="text-warning mt-3">業界標準參考</h6>
+                                            <table class="table table-sm table-dark typical-value-table">
+                                                <thead>
+                                                    <tr>
+                                                        <th>產品類型</th>
+                                                        <th>典型 FITs 範圍</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    <tr>
+                                                        <td>高階 DRAM/Flash</td>
+                                                        <td>10 - 50 FITs</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>消費性 IC</td>
+                                                        <td>100 - 500 FITs</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>工業級電子元件</td>
+                                                        <td>50 - 200 FITs</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>汽車電子</td>
+                                                        <td>< 100 FITs</td>
+                                                    </tr>
+                                                </tbody>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>

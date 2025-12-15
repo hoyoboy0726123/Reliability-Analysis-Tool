@@ -234,7 +234,9 @@ def generate_word_report_v2(data, output_file):
 
     set_table_borders(cover_table, '2563eb', '18')
 
-    doc.add_page_break()
+    # 添加一些空行來分隔封面表格和報告摘要（而不是分頁）
+    doc.add_paragraph()
+    doc.add_paragraph()
 
     # ========== REPORT SUMMARY ==========
     summary_title = doc.add_heading('REPORT SUMMARY / 報告摘要', level=0)

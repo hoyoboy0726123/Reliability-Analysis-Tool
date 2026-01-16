@@ -446,6 +446,48 @@ def calculate():
         "reliability_result": final_results
     })
 
+@app.route('/font_debug', methods=['GET'])
+def font_debug():
+    """診斷字體安裝情況"""
+    import platform
+    import glob
+    import os
+
+    debug_info = {
+        "system": platform.system(),
+        "platform": platform.platform(),
+        "python_version": platform.python_version()
+    }
+
+    # 檢查系統字體
+    font_paths = []
+    if platform.system() != 'Windows':
+        font_paths = glob.glob('/usr/share/fonts/**/*.ttf', recursive=True)
+        font_paths += glob.glob('/usr/share/fonts/**/*.otf', recursive=True)
+        font_paths += glob.glob('/usr/share/fonts/**/*.ttc', recursive=True)
+
+    debug_info["system_fonts_count"] = len(font_paths)
+    debug_info["system_fonts_sample"] = font_paths[:20]
+
+    # 檢查項目字體
+    project_fonts_dir = os.path.join(os.path.dirname(__file__), 'fonts')
+    project_fonts = []
+    if os.path.exists(project_fonts_dir):
+        project_fonts = glob.glob(os.path.join(project_fonts_dir, '*.*'))
+
+    debug_info["project_fonts_dir"] = project_fonts_dir
+    debug_info["project_fonts_exists"] = os.path.exists(project_fonts_dir)
+    debug_info["project_fonts"] = [os.path.basename(f) for f in project_fonts]
+
+    # 檢查 ReportLab 字體註冊
+    try:
+        from report_generator import CHINESE_FONT
+        debug_info["reportlab_registered_font"] = CHINESE_FONT
+    except Exception as e:
+        debug_info["reportlab_error"] = str(e)
+
+    return jsonify(debug_info)
+
 @app.route('/generate_report', methods=['POST'])
 def generate_report():
     """生成測試報告 (PDF 或 Word)"""

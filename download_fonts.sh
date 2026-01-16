@@ -1,42 +1,62 @@
 #!/bin/bash
 # 下載開源中文字體作為備用方案
-# 如果系統字體不可用，使用項目內嵌字體
+# 使用已知在 ReportLab 上工作良好的 Noto Sans SC 字體
 
 FONTS_DIR="./fonts"
-FONT_URL="https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf"
-FONT_FILE="$FONTS_DIR/NotoSansCJKsc-Regular.otf"
-
-echo "============================================================"
-echo "  Downloading fallback Chinese font"
-echo "============================================================"
-
-# 創建字體目錄
 mkdir -p "$FONTS_DIR"
 
-# 檢查字體是否已存在
-if [ -f "$FONT_FILE" ]; then
-    echo "✓ Font already exists: $FONT_FILE"
-    exit 0
-fi
+echo "============================================================"
+echo "  Downloading Chinese fonts for PDF generation"
+echo "============================================================"
 
-# 下載字體
-echo "Downloading Noto Sans CJK SC..."
-if command -v wget &> /dev/null; then
-    wget -q -O "$FONT_FILE" "$FONT_URL"
-elif command -v curl &> /dev/null; then
-    curl -sL -o "$FONT_FILE" "$FONT_URL"
-else
-    echo "⚠ Neither wget nor curl found, skipping font download"
-    exit 1
-fi
+# 字體文件列表（使用 Google Fonts 的靜態資源）
+declare -A FONTS=(
+    ["NotoSansSC-Regular.otf"]="https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf"
+)
 
-# 驗證下載
-if [ -f "$FONT_FILE" ] && [ -s "$FONT_FILE" ]; then
-    echo "✓ Font downloaded successfully: $FONT_FILE"
-    ls -lh "$FONT_FILE"
-else
-    echo "✗ Font download failed"
-    exit 1
-fi
+DOWNLOAD_SUCCESS=0
+
+for FONT_NAME in "${!FONTS[@]}"; do
+    FONT_URL="${FONTS[$FONT_NAME]}"
+    FONT_FILE="$FONTS_DIR/$FONT_NAME"
+
+    # 檢查字體是否已存在
+    if [ -f "$FONT_FILE" ] && [ -s "$FONT_FILE" ]; then
+        echo "✓ Font already exists: $FONT_NAME"
+        DOWNLOAD_SUCCESS=1
+        continue
+    fi
+
+    # 下載字體
+    echo "Downloading $FONT_NAME..."
+
+    if command -v curl &> /dev/null; then
+        curl -L -o "$FONT_FILE" "$FONT_URL" 2>/dev/null
+    elif command -v wget &> /dev/null; then
+        wget -q -O "$FONT_FILE" "$FONT_URL" 2>/dev/null
+    else
+        echo "⚠ Neither curl nor wget found"
+        continue
+    fi
+
+    # 驗證下載
+    if [ -f "$FONT_FILE" ] && [ -s "$FONT_FILE" ]; then
+        FILE_SIZE=$(du -h "$FONT_FILE" | cut -f1)
+        echo "✓ Downloaded: $FONT_NAME ($FILE_SIZE)"
+        DOWNLOAD_SUCCESS=1
+    else
+        echo "✗ Failed to download: $FONT_NAME"
+        rm -f "$FONT_FILE"
+    fi
+done
 
 echo "============================================================"
+
+if [ $DOWNLOAD_SUCCESS -eq 1 ]; then
+    echo "✓ Font download completed"
+    ls -lh "$FONTS_DIR"
+    exit 0
+else
+    echo "⚠ No fonts were downloaded"
+    exit 1
+fi

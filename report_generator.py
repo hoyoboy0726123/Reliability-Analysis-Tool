@@ -105,26 +105,63 @@ def find_and_register_chinese_font():
                 print(f"  [{i}] ✗ File not found: {font_path}")
                 continue
 
-            print(f"  [{i}] Trying: {font_name} from {font_path}")
+            file_size = os.path.getsize(font_path) / (1024 * 1024)  # MB
+            print(f"  [{i}] Trying: {font_name}")
+            print(f"       Path: {font_path}")
+            print(f"       Size: {file_size:.2f} MB")
 
-            # 對於 .ttc 文件，嘗試使用子字體索引
+            # 根據文件類型選擇註冊策略
+            registration_success = False
+
             if font_path.endswith('.ttc'):
-                try:
-                    # 嘗試索引 0（通常是第一個字體）
-                    pdfmetrics.registerFont(TTFont(font_name, font_path, subfontIndex=0))
-                except:
-                    # 如果失敗，嘗試不帶索引
-                    pdfmetrics.registerFont(TTFont(font_name, font_path))
-            else:
-                pdfmetrics.registerFont(TTFont(font_name, font_path))
+                # TrueType Collection - 嘗試多個索引
+                for subfont_idx in [0, 1, 2]:
+                    try:
+                        pdfmetrics.registerFont(TTFont(font_name, font_path, subfontIndex=subfont_idx))
+                        registration_success = True
+                        print(f"       ✓ Registered with subfontIndex={subfont_idx}")
+                        break
+                    except Exception as e:
+                        if subfont_idx == 0:
+                            print(f"       ✗ subfontIndex={subfont_idx} failed: {e}")
+                        continue
 
-            CHINESE_FONT = font_name
-            print(f"  [{i}] ✓✓✓ SUCCESS! Registered: {font_name}")
-            print(f"{'='*60}\n")
-            return True
+            elif font_path.endswith('.otf'):
+                # OpenType Font - 直接註冊
+                try:
+                    pdfmetrics.registerFont(TTFont(font_name, font_path))
+                    registration_success = True
+                    print(f"       ✓ Registered as OpenType")
+                except Exception as e:
+                    print(f"       ✗ OpenType registration failed: {e}")
+
+            else:
+                # TrueType Font (.ttf) - 標準註冊
+                try:
+                    pdfmetrics.registerFont(TTFont(font_name, font_path))
+                    registration_success = True
+                    print(f"       ✓ Registered as TrueType")
+                except Exception as e:
+                    print(f"       ✗ TrueType registration failed: {e}")
+
+            # 如果註冊成功，進行測試
+            if registration_success:
+                try:
+                    # 測試字體是否能渲染中文
+                    from reportlab.pdfbase.pdfmetrics import getFont
+                    font_obj = getFont(font_name)
+                    print(f"  [{i}] ✓✓✓ SUCCESS! Font '{font_name}' is ready")
+                    CHINESE_FONT = font_name
+                    print(f"{'='*60}\n")
+                    return True
+                except Exception as e:
+                    print(f"       ✗ Font validation failed: {e}")
+                    continue
 
         except Exception as e:
-            print(f"  [{i}] ✗ Failed: {e}")
+            print(f"  [{i}] ✗ Unexpected error: {e}")
+            import traceback
+            traceback.print_exc()
             continue
 
     # 如果所有字體都失敗

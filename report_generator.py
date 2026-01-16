@@ -36,46 +36,102 @@ def find_and_register_chinese_font():
     """自動偵測並註冊中文字體"""
     global CHINESE_FONT
 
+    print(f"\n{'='*60}")
+    print(f"PDF Font Detection - System: {platform.system()}")
+    print(f"{'='*60}")
+
     # 定義不同系統的字體路徑和字體名稱
     font_configs = []
 
+    # 優先檢查項目內嵌字體（最高優先級）
+    project_fonts_dir = os.path.join(os.path.dirname(__file__), 'fonts')
+    if os.path.exists(project_fonts_dir):
+        print(f"\nChecking project fonts directory: {project_fonts_dir}")
+        project_fonts = glob.glob(os.path.join(project_fonts_dir, '*.otf'))
+        project_fonts += glob.glob(os.path.join(project_fonts_dir, '*.ttf'))
+        print(f"Found {len(project_fonts)} font files in project directory")
+
+        for font_path in project_fonts:
+            font_name = 'Project_' + os.path.basename(font_path).replace('.', '_').replace('-', '_')
+            font_configs.append((font_name, font_path))
+            print(f"  + {os.path.basename(font_path)}")
+
     if platform.system() == 'Windows':
-        # Windows 字體
+        # Windows 字體 - 優先使用 .ttf 格式
         font_configs = [
-            ('MicrosoftJhengHei', 'C:/Windows/Fonts/msjh.ttc'),
             ('SimHei', 'C:/Windows/Fonts/simhei.ttf'),
+            ('MicrosoftJhengHei', 'C:/Windows/Fonts/msjh.ttc'),
             ('SimSun', 'C:/Windows/Fonts/simsun.ttc'),
         ]
     else:
-        # Linux 字體（Render.com 和其他 Linux 環境）
-        font_configs = [
-            ('NotoSansCJK', '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'),
-            ('NotoSerifCJK', '/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc'),
-            ('WenQuanYiZenHei', '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc'),
-            ('WenQuanYiMicroHei', '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc'),
-        ]
+        # Linux 字體 - 優先使用 .ttf 格式
+        # ReportLab 對 .ttf 的支持最好，.ttc 可能有問題
 
-        # 嘗試使用 glob 找到 Noto 字體
-        noto_fonts = glob.glob('/usr/share/fonts/**/Noto*CJK*.ttc', recursive=True)
-        noto_fonts += glob.glob('/usr/share/fonts/**/Noto*CJK*.otf', recursive=True)
-        for font_path in noto_fonts:
-            font_name = 'NotoSansCJK_' + font_path.split('/')[-1].replace('.', '_')
-            font_configs.insert(0, (font_name, font_path))
+        # 先搜索所有可能的字體文件
+        print("\nSearching for Chinese fonts...")
+        all_fonts = []
+
+        # 優先級1: .ttf 格式的 Noto Sans CJK
+        all_fonts += glob.glob('/usr/share/fonts/**/NotoSansCJK*.ttf', recursive=True)
+        all_fonts += glob.glob('/usr/share/fonts/**/NotoSans-*.ttf', recursive=True)
+
+        # 優先級2: WenQuanYi .ttc 格式
+        all_fonts += glob.glob('/usr/share/fonts/**/wqy*.ttc', recursive=True)
+
+        # 優先級3: 其他中文字體
+        all_fonts += glob.glob('/usr/share/fonts/**/NotoSerifCJK*.ttf', recursive=True)
+        all_fonts += glob.glob('/usr/share/fonts/**/*CJK*.otf', recursive=True)
+
+        print(f"Found {len(all_fonts)} potential font files:")
+        for font in all_fonts[:10]:  # 只顯示前10個
+            print(f"  - {font}")
+
+        # 將找到的字體添加到配置（優先 .ttf）
+        for font_path in all_fonts:
+            if font_path.endswith('.ttf'):
+                font_name = 'Font_' + os.path.basename(font_path).replace('.', '_').replace('-', '_')
+                font_configs.insert(0, (font_name, font_path))
+
+        # .ttc 格式作為後備（需要指定字體索引）
+        font_configs.append(('WenQuanYiZenHei', '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc'))
+        font_configs.append(('WenQuanYiMicroHei', '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc'))
+
+    print(f"\nTrying to register fonts (total: {len(font_configs)} candidates)...")
 
     # 嘗試註冊字體
-    for font_name, font_path in font_configs:
+    for i, (font_name, font_path) in enumerate(font_configs, 1):
         try:
-            if os.path.exists(font_path):
+            if not os.path.exists(font_path):
+                print(f"  [{i}] ✗ File not found: {font_path}")
+                continue
+
+            print(f"  [{i}] Trying: {font_name} from {font_path}")
+
+            # 對於 .ttc 文件，嘗試使用子字體索引
+            if font_path.endswith('.ttc'):
+                try:
+                    # 嘗試索引 0（通常是第一個字體）
+                    pdfmetrics.registerFont(TTFont(font_name, font_path, subfontIndex=0))
+                except:
+                    # 如果失敗，嘗試不帶索引
+                    pdfmetrics.registerFont(TTFont(font_name, font_path))
+            else:
                 pdfmetrics.registerFont(TTFont(font_name, font_path))
-                CHINESE_FONT = font_name
-                print(f"✓ Successfully registered font: {font_name} from {font_path}")
-                return True
+
+            CHINESE_FONT = font_name
+            print(f"  [{i}] ✓✓✓ SUCCESS! Registered: {font_name}")
+            print(f"{'='*60}\n")
+            return True
+
         except Exception as e:
-            print(f"✗ Failed to register {font_name}: {e}")
+            print(f"  [{i}] ✗ Failed: {e}")
             continue
 
     # 如果所有字體都失敗
-    print("⚠ Warning: No Chinese font found, using Helvetica (Chinese characters may not display)")
+    print(f"\n{'='*60}")
+    print("⚠⚠⚠ WARNING: No Chinese font could be registered!")
+    print("PDF will use Helvetica (Chinese characters will appear as boxes)")
+    print(f"{'='*60}\n")
     CHINESE_FONT = 'Helvetica'
     return False
 

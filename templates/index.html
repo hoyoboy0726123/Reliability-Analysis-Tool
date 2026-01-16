@@ -636,6 +636,11 @@
                                                         <h6 class="alert-heading fw-bold text-info mb-0">
                                                             <i class="bi bi-lightbulb-fill me-2"></i>分析結論 (Conclusion)
                                                         </h6>
+                                                        <!-- PDF 報告功能已停用，僅支援 Word 格式 -->
+                                                        <button type="button" class="btn btn-sm btn-info" onclick="generateReport('word'); return false;" id="generate_report_btn">
+                                                            <i class="bi bi-file-earmark-word me-1"></i>生成 Word 報告
+                                                        </button>
+                                                        <!-- 原 PDF/Word 下拉選單已註解
                                                         <div class="btn-group" role="group">
                                                             <button type="button" class="btn btn-sm btn-info dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" id="generate_report_btn">
                                                                 <i class="bi bi-file-earmark-text me-1"></i>生成測試報告
@@ -653,6 +658,7 @@
                                                                 </li>
                                                             </ul>
                                                         </div>
+                                                        -->
                                                     </div>
                                                     <p class="mb-0 text-light" id="conclusion_text"
                                                         style="line-height: 1.6; font-size: 0.95rem;">

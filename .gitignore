@@ -24,3 +24,7 @@ Thumbs.db
 
 # Project specific
 *.log
+debug_*.txt
+*.docx
+*.pdf
+image.png

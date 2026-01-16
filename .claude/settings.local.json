@@ -2,7 +2,14 @@
   "permissions": {
     "allow": [
       "Bash(git checkout:*)",
-      "Bash(python test_af_compatibility.py:*)"
+      "Bash(python test_af_compatibility.py:*)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nfeat: 新增UV和化學加速因子 + 互動式參數指南\n\n主要功能:\n- 新增紫外線輻射加速因子 (UV Radiation)\n- 新增化學濃度加速因子 (Chemical Concentration)\n- 創建完整的互動式參數設定指南頁面\n- 改善UI可讀性 (白色標題、黃色說明)\n- 移除電壓參數在未勾選時的顯示\n- 修復AF結果卡片間距問題\n\n技術改進:\n- 7種加速因子全部支援 (Temp, Humidity, Voltage, TC, Vibration, UV, Chemical)\n- 新增測試腳本驗證計算正確性\n- 向後相容性完整保留\n\nUI改善:\n- 所有主要文字改為白色提升可讀性\n- 參數說明改為黃色更清晰\n- AF卡片增加間距避免重疊\n- 移除所有\"New\"標籤\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(python test_eyring.py:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(dir:*)",
+      "Bash(venv/Scripts/python:*)",
+      "Bash(venv/Scripts/pip install:*)"
     ],
     "deny": [],
     "ask": []

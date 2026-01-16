@@ -188,8 +188,11 @@ def generate_word_report(data, output_file):
     doc = Document()
 
     # 設定默認字體（支持中文）
-    doc.styles['Normal'].font.name = 'Microsoft JhengHei'
-    doc.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), 'Microsoft JhengHei')
+    # Word 文件使用通用字體名稱，在客戶端打開時會根據系統可用字體顯示
+    # 這些字體在 Windows, macOS, Linux 都有對應的替代方案
+    default_font = 'Microsoft JhengHei, Noto Sans CJK TC, PingFang TC, Arial Unicode MS'
+    doc.styles['Normal'].font.name = default_font
+    doc.styles['Normal']._element.rPr.rFonts.set(qn('w:eastAsia'), default_font)
 
     # === 封面頁 ===
     # 添加空白以置中內容
@@ -242,7 +245,7 @@ def generate_word_report(data, output_file):
             for paragraph in cell.paragraphs:
                 paragraph.alignment = WD_ALIGN_PARAGRAPH.CENTER
                 for run in paragraph.runs:
-                    run.font.name = 'Microsoft JhengHei'
+                    run.font.name = default_font
                     run.font.size = Pt(12)
 
         # 設置背景顏色
@@ -297,7 +300,7 @@ def generate_word_report(data, output_file):
         for cell in cells:
             for paragraph in cell.paragraphs:
                 for run in paragraph.runs:
-                    run.font.name = 'Microsoft JhengHei'
+                    run.font.name = default_font
                     run.font.size = Pt(10)
 
     # 設置表格邊框

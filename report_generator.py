@@ -16,6 +16,9 @@ from datetime import datetime
 import base64
 import io
 import re
+import os
+import platform
+import glob
 from PIL import Image as PILImage
 
 # 導入圖表生成模組
@@ -28,22 +31,56 @@ except ImportError as e:
 
 # 嘗試註冊中文字體（如果系統有的話）
 CHINESE_FONT = 'Helvetica'  # 默認使用 Helvetica
-try:
-    # Windows 系統的微軟正黑體
-    pdfmetrics.registerFont(TTFont('MicrosoftJhengHei', 'C:/Windows/Fonts/msjh.ttc'))
-    CHINESE_FONT = 'MicrosoftJhengHei'
-    print("Successfully registered MicrosoftJhengHei font")
-except Exception as e:
-    print(f"Failed to register MicrosoftJhengHei: {e}")
-    try:
-        # 另一個常見的中文字體
-        pdfmetrics.registerFont(TTFont('SimHei', 'C:/Windows/Fonts/simhei.ttf'))
-        CHINESE_FONT = 'SimHei'
-        print("Successfully registered SimHei font")
-    except Exception as e2:
-        print(f"Failed to register SimHei: {e2}")
-        # 如果都失敗，使用 Helvetica（不支援中文，但至少不會報錯）
-        print("Using Helvetica font (no Chinese support)")
+
+def find_and_register_chinese_font():
+    """自動偵測並註冊中文字體"""
+    global CHINESE_FONT
+
+    # 定義不同系統的字體路徑和字體名稱
+    font_configs = []
+
+    if platform.system() == 'Windows':
+        # Windows 字體
+        font_configs = [
+            ('MicrosoftJhengHei', 'C:/Windows/Fonts/msjh.ttc'),
+            ('SimHei', 'C:/Windows/Fonts/simhei.ttf'),
+            ('SimSun', 'C:/Windows/Fonts/simsun.ttc'),
+        ]
+    else:
+        # Linux 字體（Render.com 和其他 Linux 環境）
+        font_configs = [
+            ('NotoSansCJK', '/usr/share/fonts/opentype/noto/NotoSansCJK-Regular.ttc'),
+            ('NotoSerifCJK', '/usr/share/fonts/opentype/noto/NotoSerifCJK-Regular.ttc'),
+            ('WenQuanYiZenHei', '/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc'),
+            ('WenQuanYiMicroHei', '/usr/share/fonts/truetype/wqy/wqy-microhei.ttc'),
+        ]
+
+        # 嘗試使用 glob 找到 Noto 字體
+        noto_fonts = glob.glob('/usr/share/fonts/**/Noto*CJK*.ttc', recursive=True)
+        noto_fonts += glob.glob('/usr/share/fonts/**/Noto*CJK*.otf', recursive=True)
+        for font_path in noto_fonts:
+            font_name = 'NotoSansCJK_' + font_path.split('/')[-1].replace('.', '_')
+            font_configs.insert(0, (font_name, font_path))
+
+    # 嘗試註冊字體
+    for font_name, font_path in font_configs:
+        try:
+            if os.path.exists(font_path):
+                pdfmetrics.registerFont(TTFont(font_name, font_path))
+                CHINESE_FONT = font_name
+                print(f"✓ Successfully registered font: {font_name} from {font_path}")
+                return True
+        except Exception as e:
+            print(f"✗ Failed to register {font_name}: {e}")
+            continue
+
+    # 如果所有字體都失敗
+    print("⚠ Warning: No Chinese font found, using Helvetica (Chinese characters may not display)")
+    CHINESE_FONT = 'Helvetica'
+    return False
+
+# 執行字體註冊
+find_and_register_chinese_font()
 
 def format_af_value(value):
     """安全格式化 AF 值"""
